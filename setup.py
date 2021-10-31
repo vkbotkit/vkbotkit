@@ -1,11 +1,11 @@
 import setuptools
-
+from testbotlib import __version__
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="testbotlib",
-    version="0.0.1",
+    version=__version__,
     author="kensoi",
     author_email="kensoi@dshdev.ru",
     description="Asynchronous library for VK Bots API",
