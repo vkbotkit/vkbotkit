@@ -112,3 +112,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# dev stuff
+assets/
+library/
+examples/
+libragram/
+testcanarybot/
+bot.py
+config.py
