@@ -1,24 +1,43 @@
 import asyncio
-from logging import Logger, log
-import time
 import os
+import time
 import typing
+import logging
+import logging.config
 from importlib.util import (
     spec_from_file_location,
     module_from_spec)
 
-from ..objects.data import response
+from .. import utils, objects
 
-from .. import utils
-from . import _api
+
+class _logger:
+    def __init__(self, logger_name = None, log_level: objects.enums.log_level = objects.enums.log_level.INFO, file_log = False, print_log = False):
+        self.logger = logging.getLogger(logger_name)
+        self.logger.setLevel(log_level.value)
+        self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+        if file_log:
+            self.fh = logging.FileHandler('testbotlib_session.log')
+            self.fh.setLevel(log_level.value)
+            self.fh.setFormatter(self.formatter)
+            self.logger.addHandler(self.fh)
+
+        if print_log:
+            self.ch = logging.StreamHandler()
+            self.ch.setLevel(log_level.value)
+            self.ch.setFormatter(self.formatter)
+            self.logger.addHandler(self.ch)
+
+        # 'application' code
 
 
 class _assets:
     def __init__(self, sdk, assets = None):
         if not assets:
-            assets = utils.path_separator.join([os.getcwd(),"assets", ""])
+            assets = objects.path_separator.join([os.getcwd(),"assets", ""])
 
-        if assets[-1] != utils.path_separator: assets += utils.path_separator
+        if assets[-1] != objects.path_separator: assets += objects.path_separator
 
         if assets.startswith("."):
             assets = os.getcwd() + assets[1:]
@@ -80,70 +99,28 @@ class reply_task:
             return True
 
 
-class sdk:
-    def __init__ (self, token, group_id, assets_path = None, logger = None):
-        self.__group_id = group_id
-        self.__event_loop = asyncio.get_event_loop()
-        self.__library = []
-        self.__logger = logger
-        
-        self.assets = _assets(self, assets_path)
-        self.core = _api.core(token, group_id, logger = logger)
-        self.replies = replies()
-        self.uploader = _api.uploader(self.core._api, self.assets)
-
-        
-
-    async def start_polling(self, debug:bool=True):
-        self.core._longpoll._is_polling = True
-        self.debug = debug
-
-        self.log("poll started")
-        await self.core._longpoll._longpoll__update_longpoll_server()
-
-        while self.core._longpoll._is_polling:
-            for event in await self.core._longpoll._check():
-                pass
-
-
-    def is_polling(self):
-        return self.core._longpoll._is_polling
-
-
-    def stop_polling(self):
-        self.core._longpoll._is_polling = False
-        self.log("polling finished", "debug")
-
-
-    def log(self, message, log_level="info"):
-        print(f"[{log_level}] message")
-
-
-    def update_lib(self, lib):
-        self.__library = []
-
-
 class callbacklib:
-    def __init__(self, sdk, libdir):
-        self.sdk = sdk
+    def __init__(self, libdir):
         self.__libdir = libdir
         self.handlers = []
+        self.__mentions = []
+
 
     def import_library(self):
         if not self.__libdir:
-            self.__libdir = os.getcwd() + utils.path_separator + 'library'
+            self.__libdir = os.getcwd() + objects.path_separator + 'library'
 
         if self.__libdir.startswith("."):
             self.__libdir = os.getcwd() + self.__libdir[1:]
 
         if not os.path.exists(self.__libdir):
             os.mkdir(self.__libdir)
-            self.sdk.log("library directory was made by framework")
+            self.sdk.log("libdir created")
 
         if not os.path.isdir(self.__libdir):
-            raise TypeError("Libdir should be dir, not a file!")
+            raise TypeError("libdir should be dir, not a file!")
 
-        listdir = filter_folders(self.__libdir)
+        listdir = utils.filter_folders(self.__libdir)
 
         for module_path in listdir:
             spec = spec_from_file_location(module_path[len(self.__libdir) + 1:].replace(".py", "", 1), module_path)
@@ -151,32 +128,17 @@ class callbacklib:
             spec.loader.exec_module(module)
             self.import_module(module.Main)
 
-    def import_module(self, library = None):
-        self.handlers.extend(library()._handlers)
+
+    def import_module(self, lib = None):
+        self.handlers.extend(lib()._handlers)
         self.handlers.sort(key = lambda h: h.filter.priority)
 
-def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
-    path_c = os.getcwd()
-    if path:
-        if path[0] == '.':
-            path_c += path[True:]
-        else:
-            path_c = path
 
-    return utils.path_separator.join([path_c, path_type])
+    def set_mentions(self, *args):
+        args = list(args)
+        mentions = filter(lambda x: isinstance(x, str), args)
 
+        if mentions != args:
+            raise Exception("every arg should be str")
 
-def filter_folders(libdir):
-    files_list = os.listdir(libdir)
-    response = []
-
-    for name in files_list:
-        obj_path = utils.path_separator.join([libdir, name])
-        if os.path.isfile(obj_path):
-            if name.endswith(".py"):
-                response.append(obj_path)
-
-        elif "__init__.py" in os.listdir(obj_path):
-            response.append(utils.path_separator.join([obj_path, "__init__.py"]))
-    
-    return response
+        self.__mentions = mentions

@@ -2,6 +2,9 @@ import aiohttp
 import asyncio
 import six
 import threading
+import logging
+
+logger = logging.getLogger("testbotlib")
 
 from io import IOBase as FileType
 from io import BytesIO
@@ -37,6 +40,10 @@ class client_session():
             self.create_session(thread)
             return getattr(thread.session, name)
 
+
+    def __repr__(self):
+        return f"<testcanarybot.framework._api.client_session>"
+
 class api:
     __slots__ = ('_http', '_method', '_string')
 
@@ -54,6 +61,7 @@ class api:
             (self._string if self._method else '') + method
         )
 
+
     async def __call__(self, **kwargs):
         for k, v in six.iteritems(kwargs):
             if isinstance(v, (list, tuple)):
@@ -61,11 +69,16 @@ class api:
 
         return await self._method(self._string, kwargs)
 
+
+    def __repr__(self):
+        return f"<testcanarybot.framework._api.api>"
+
+
 class longpoll:
-    def __init__(self, http, method, group_id, log) -> None:
+    def __init__(self, http, method) -> None:
         self.__http = http
         self.__method = method
-        self.__group_id = group_id
+        self._is_polling = False
 
         self.__url = ""
         self.__key = ""
@@ -73,16 +86,18 @@ class longpoll:
         self.__wait = 25
 
 
-    async def __update_longpoll_server(self, update_ts: bool = True) -> None:
-        response = await self.__method('groups.getLongPollServer', {'raw': True, 'group_id': self.__group_id})
+    async def __update_longpoll_server(self, group_id, update_ts: bool = True) -> None:
+        response = await self.__method('groups.getLongPollServer', {'raw': True, 'group_id': group_id})
 
         if update_ts: 
             self.__ts = response['ts']
         self.__key = response['key']
         self.__url = response['server']
 
+        logger.log(10, "longpoll has been updated")
 
-    async def _check(self):
+
+    async def _check(self, group_id):
         values = {'act': 'a_check',
                 'key': self.__key,
                 'ts': self.__ts,
@@ -101,41 +116,52 @@ class longpoll:
             self.__ts = response['ts']
 
         elif response['failed'] == 2:
-            await self.__update_longpoll_server(False)
+            await self.__update_longpoll_server(group_id, False)
 
         elif response['failed'] == 3:
-            await self.__update_longpoll_server()
+            await self.__update_longpoll_server(group_id)
+            
+        logger.log(10, "polled once for page with id = %i", group_id)
 
         return []
+    
+
+    def __repr__(self):
+        return f"<testcanarybot.framework._api.longpoll>"
 
 
 class core:
-    def __init__(self, token, group_id, logger):
+    def __init__(self, token):
         self.__token = token
-        self.__group_id = group_id
         self.__v = "5.131"
 
         self.__session = client_session(trust_env=True)
         self._api = api(self.__session, self.__method)
-        self._longpoll = longpoll(self.__session, self.__method, group_id, logger)
+        self._longpoll = longpoll(self.__session, self.__method)
+
 
     @property
     def api_url(self):
         return "https://api.vk.com/method/"
 
+
     async def __method(self, method="groups.getById", params = {}):
         request_data = params
         is_raw = request_data.pop("raw", False)
-        request_data["access_token"] = self.__token
-        request_data["v"] = self.__v
+
+        if "access_token" not in request_data:
+            request_data["access_token"] = self.__token
+
+        if "v" not in request_data:
+            request_data["v"] = self.__v
+
+        logger.log(10, "method '%s' was called with params %s", method, str(request_data))
 
         result = await self.__session.post(self.api_url + method, data = request_data)
         json = await result.json(content_type=None)
 
         if "response" in json: 
             json = json['response']
-
-        print(json)
 
         if "error" in json:
             raise Exception("response error")
@@ -157,31 +183,30 @@ class core:
 
     
     def __repr__(self):
-        return f"<testcanarybot.framework._api.core@club{self.__group_id}>"
+        return f"<testcanarybot.framework._api.core>"
 
 
 class uploader:
-    __slots__ = ('__api', '__assets')
+    __slots__ = ('__sdk')
 
-    def __init__(self, api, assets):
-        self.__api = api
-        self.__assets = assets
+    def __init__(self, sdk):
+        self.__sdk = sdk
 
 
     async def photo_messages(self, photos):
-        response = await self.__api.photos.getMessagesUploadServer(peer_id = 0)
-        response = await self.__api._http.post(response.upload_url, data = self.convertAsset(photos))
+        response = await self.__sdk.api.photos.getMessagesUploadServer(peer_id = 0)
+        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photos))
         response = await response.json(content_type = None)
 
-        return await self.__api.photos.saveMessagesPhoto(**response)
+        return await self.__sdk.api.photos.saveMessagesPhoto(**response)
 
         
     async def photo_group_widget(self, photo, image_type):
-        response = await self.__api.appWidgets.getGroupImageUploadServer(image_type = image_type)
-        response = await self.__api._http.post(response.upload_url, data = self.convertAsset(photo))
+        response = await self.__sdk.api.appWidgets.getGroupImageUploadServer(image_type = image_type)
+        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photo))
         response = await response.json(content_type = None)
 
-        return await self.__api.appWidgets.saveGroupImage(**response)
+        return await self.__sdk.api.appWidgets.saveGroupImage(**response)
 
 
     async def photo_chat(self, photo, peer_id):
@@ -192,11 +217,11 @@ class uploader:
             "chat_id": peer_id - 2000000000,
         }
 
-        response = await self.__api.photos.getChatUploadServer(**values)
-        response = await self.__api._http.post(response.upload_url, data = self.convertAsset(photo))
+        response = await self.__sdk.api.photos.getChatUploadServer(**values)
+        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photo))
         response = await response.json(content_type = None)
 
-        return await self.__api.messages.setChatPhoto(file = response['response'])
+        return await self.__sdk.api.messages.setChatPhoto(file = response['response'])
 
 
     async def document(self, document, title=None, tags=None, peer_id=None, doc_type = 'doc', to_wall = None):
@@ -205,14 +230,14 @@ class uploader:
             'type': doc_type
         }
         
-        response = await self.__api.docs.getMessagesUploadServer(**values) # vk.com/dev/docs.getMessagesUploadServer
-        response = await self.__api._http.post(response.upload_url, data = self.convertAsset(document, sign = 'file'))
+        response = await self.__sdk.api.docs.getMessagesUploadServer(**values) # vk.com/dev/docs.getMessagesUploadServer
+        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(document, sign = 'file'))
         response = await response.json(content_type = None)
 
         if title: response['title'] = title 
         if tags: response['tags'] = tags
 
-        return await self.__api.docs.save(**response) 
+        return await self.__sdk.api.docs.save(**response) 
 
 
     async def audio_message(self, audio, peer_id=None):
@@ -224,10 +249,10 @@ class uploader:
               link_url=None):
 
         if file_type == 'photo':
-            method = self.__api.stories.getPhotoUploadServer
+            method = self.__sdk.api.stories.getPhotoUploadServer
 
         elif file_type == 'video':
-            method = self.__api.stories.getVideoUploadServer
+            method = self.__sdk.api.stories.getVideoUploadServer
 
         else:
             raise ValueError('type should be either photo or video')
@@ -253,10 +278,10 @@ class uploader:
         if link_url: values['link_url'] = link_url
 
         response = await method(**values)
-        response = await self.__api._http.post(response.upload_url, data = self.convertAsset(file, 'file' if file_type == "photo" else 'video_file'))
+        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(file, 'file' if file_type == "photo" else 'video_file'))
         response = await response.json(content_type = None)
 
-        return await self.__api.stories.save(upload_results = response.response.upload_result)
+        return await self.__sdk.api.stories.save(upload_results = response.response.upload_result)
 
 
     def convertAsset(self, files, sign = 'file'):
@@ -264,9 +289,9 @@ class uploader:
             response = None
 
             if isinstance(files, str): 
-                response = self.__assets(files, 'rb', buffering = 0)
+                response = self.__sdk.assets(files, 'rb', buffering = 0)
             elif isinstance(files, bytes): 
-                response = self.__assets(files)
+                response = self.__sdk.assets(files)
             else:
                 response = files
 
@@ -282,7 +307,7 @@ class uploader:
                     response = None
 
                     if isinstance(files[i], str): 
-                        response = self.__assets(files[i], 'rb', buffering = 0)
+                        response = self.__sdk.assets(files[i], 'rb', buffering = 0)
                     elif isinstance(files[i], bytes): 
                         response = BytesIO(files[i])
                     else:
@@ -298,3 +323,6 @@ class uploader:
         else:
             raise TypeError("Only str, bytes or file-like objects")
 
+
+    def __repr__(self):
+        return f"<testcanarybot.framework._api.uploader>"

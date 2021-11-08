@@ -8,11 +8,11 @@ import threading
 import typing
 
 class handler(threading.Thread):
-    def __init__(self, filter, libraryCallback, libraryModule = None):
+    def __init__(self, filter, libraryCallback, library_module = None):
         threading.Thread.__init__(self)
         self.daemon = True
         self.filter = filter
-        self.libraryModule = libraryModule
+        self.library_module = library_module
         self.libraryCallback = libraryCallback
 
         self.start()
@@ -31,8 +31,8 @@ class handler(threading.Thread):
     async def __create_task(self, tools, package):
         parse_args = []
 
-        if self.libraryModule: 
-            parse_args.append(self.libraryModule)
+        if self.library_module: 
+            parse_args.append(self.library_module)
 
         parse_args.append(package)
         self.loop.create_task(self.libraryCallback(*parse_args))

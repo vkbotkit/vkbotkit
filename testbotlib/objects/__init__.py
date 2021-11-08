@@ -1,8 +1,11 @@
 from . import (
     data, decorators, enums, exceptions, keyboard
 )
+import os
 
-class libraryModule:
+path_separator = "\\" if os.name == 'nt' else "/"
+
+class library_module:
     def __init__(self):
         attrs_a = dir(self)
         attrs_b = dir(object())

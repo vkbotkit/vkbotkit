@@ -74,6 +74,22 @@ class action(Enum):
     chat_invite_user_by_link = "chat_invite_user_by_link"
 
 
+class log_level(Enum):
+    CRITICAL = 50
+    ERROR = 40
+    WARNING = 30
+    INFO = 20
+    DEBUG = 10
+    NOTSET = 0
+
+class name_cases(Enum):
+    nom = 'nom'
+    gen = 'gen'
+    dat = 'dat'
+    acc = 'acc'
+    ins = 'ins'
+    abl = 'abl'
+
 class values(Enum):
     empty = ''
     log = 'log'
