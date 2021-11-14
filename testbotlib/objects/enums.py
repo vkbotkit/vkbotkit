@@ -100,3 +100,19 @@ class values(Enum):
 
 
     hidden = '$$$'
+
+
+class keyboardcolor(Enum):
+    PRIMARY = 'primary' # blue
+    SECONDARY = 'secondary' # white
+    NEGATIVE = 'negative' # red
+    POSITIVE = 'positive' # green
+
+
+class keyboardbutton(Enum):
+    TEXT = "text"
+    LOCATION = "location"
+    VKPAY = "vkpay"
+    VKAPPS = "open_app"
+    OPENLINK = "open_link"
+    CALLBACK = "callback"

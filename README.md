@@ -1,30 +1,31 @@
 # TESTBOT-NEWVK
 
-## Install Guide:
-```bash
-$ pip3 install testbot-newvk
-```
-or
+## Install
 
 ```bash
 $ pip3 install https://github.com/kensoi/testbot-newvk/tarball/main/
 ```
 
-## Set up guide:
+## First bot script
 
 ```python
-from testbotlib import bot
-from testbotlib.objects import library_module
+from testbotlib import librabot
+from testbotlib.objects import decorators, filters, enums
 import asyncio
 
-loop = asyncio.get_event_loop()
 
 class basic_lib(library_module):
-    # paste here commands
+    @decorators.callback(filters.whichUpdate({enums.events.message_new,}))
+    async def send_hello(self, package):
+        await package.toolkit.send_reply(package, "hello world!")
+
 
 async def main():
-    bot_test = bot("<token>")
-    await bot_test.start_polling()
+    bot = librabot("<token>") # insert here token for your bot instead of <token>
+    bot.library.import_module(basic_lib)
+    await bot.start_polling()
 
+
+loop = asyncio.get_event_loop()
 loop.run_until_complete(main())
 ```

@@ -1,6 +1,6 @@
 import typing
 from . import enums
-
+from . import data
 class Filter:
     def __init__(self) -> None:
         self.priority = 0
@@ -89,22 +89,43 @@ class whichUpdate(Filter):
         return package.type in self.types
         
 
+class isForYou(Filter):
+    def __init__(self, mentions):
+        mapped_mentions = map(lambda x: str(x).lower(), mentions)
+        self.mentions = set(mapped_mentions)
+        self.update_type = whichUpdate({enums.events.message_new})
+        self.priority = 5
+        self.bot_id = None
+
+
+    async def check(self, package):
+        if await self.update_type.check(package):
+            if len(package.items) >= 2:
+                mention = package.items[0]
+                if isinstance(mention, str) and mention.lower() in self.mentions:
+                    return True
+                
+                elif isinstance(mention, data.mention):
+                    if not self.group_id:
+                        res = await package.toolkit.get_me()
+                        self.bot_id = res.id
+                        if res.bot_type == "club":
+                            self.bot_id = -self.bot_id
+
+                    return self.bot_id == mention.id
+
 class isCommand(Filter):
-    def __init__(self, commands: typing.Union[list, set]):
+    def __init__(self, commands):
         mapped_commands = map(lambda x: str(x).lower(), commands)
         self.commands = set(mapped_commands)
         self.update_type = whichUpdate({enums.events.message_new})
         self.priority = 5
 
 
-    async def check(self, package) -> typing.Optional[bool]:
+    async def check(self, package):
         if await self.update_type.check(package):
-            if len(package.commands) > 0:
-                command = package.commands[0]
-                if command.start == 0:
-                    if command.command.lower() in self.commands:
-                        return True
-
+            if len(package.items) >= 2:
+                return package.items[1] in self.commands
 
 class havePayload():
     def __init__(self):

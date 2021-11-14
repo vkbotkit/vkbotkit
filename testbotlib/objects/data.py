@@ -33,9 +33,21 @@ class mention:
     __slots__ = ('id', 'call') 
 
 
-    def __init__(self, page_id, mention = ""):
-        self.id = page_id
-        self.call = mention
+    def __init__(self, text):
+        if text[0] != "[" or text[-1] != "]":
+            raise Exception(f"can't init mention from this text: \"{text}\" ")
+
+        text = text[1:-1]
+        OBJ, self.call = text.split("|")
+
+        if OBJ.startswith('id'):
+            self.id = int(OBJ[2:])
+
+        elif OBJ.startswith('club'):
+            self.id = -int(OBJ[4:])
+
+        else:
+            self.id = -int(OBJ[6:])
 
 
     def __int__(self):
@@ -99,89 +111,3 @@ class package(response):
     peer_id = 1
     from_id = 1
     items = []
-                
-
-    class params:
-        action = False
-        attachments = False
-        payload = False
-        command = False
-        from_chat = False
-        gment = ""
-        mentions = []
-        key_start = 0
-        bot_mentioned = False
-
-
-    type = None
-
-
-    def getItems(self):
-        return self.items[:-1]
-            
-
-    def check(self, command: list) -> typing.Union[bool, list]:
-        """
-        Following keys:
-        $item - any string
-        $items - any string
-        $expr - expression item
-        $exprs - list from this item to the end is a list of expression objects
-        $mention - mention item
-        $mentions - list from this item to the end is a list of mention objects
-        """
-        if len(self.items) == 0:
-            return False
-        
-        if command[-1] not in [self.__mentions, self.__exprs, self.__items]:
-            if len(command) + 1 != len(self.items): 
-                return False
-
-        for i in range(len(command)):
-            if command[i] == self.items[i]:
-                continue
-                
-            elif command[i] == self.__item:
-                if not isinstance(self.items[i], str):
-                    return False
-
-                continue
-
-            elif command[i] == self.__items:
-                return self.items[i:-1]
-
-            elif command[i] == self.__expr:
-                if not isinstance(self.items[i], (expression, str)):
-                    return False
-
-                continue
-
-            elif command[i] == self.__mention:
-                if not isinstance(self.items[i], mention):
-                    return False
-
-                continue
-
-            elif command[i] == self.__exprs:
-                if not isinstance(i, expression):
-                    return False
-
-                return self.items[i:-1]
-
-            elif command[i] == self.__mentions:
-                mentions = 0
-                for j in self.items[i:-1]:
-                    if not isinstance(j, (mention, str)):
-                        return False
-                    mentions += 1
-
-                if mentions > 1:
-                    return self.items[i:-1]
-
-                else:
-                    return False
-
-            else:
-                return False
-            
-        return True

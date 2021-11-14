@@ -7,15 +7,11 @@ import asyncio
 import threading
 import typing
 
-class handler(threading.Thread):
-    def __init__(self, filter, libraryCallback, library_module = None):
-        threading.Thread.__init__(self)
-        self.daemon = True
+class handler():
+    def __init__(self, filter, libraryCallback, library_module):
         self.filter = filter
-        self.library_module = library_module
+        self.libraryModule = library_module
         self.libraryCallback = libraryCallback
-
-        self.start()
 
 
     def __repr__(self):
@@ -26,30 +22,14 @@ class handler(threading.Thread):
         self.loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self.loop)
         self.loop.run_forever()
-
-
-    async def __create_task(self, tools, package):
-        parse_args = []
-
-        if self.library_module: 
-            parse_args.append(self.library_module)
-
-        parse_args.append(package)
-        self.loop.create_task(self.libraryCallback(*parse_args))
     
 
-    async def create_task(self, tools, package):
+    async def create_task(self, package):
         if await self.filter.check(package):
-            asyncio.run_coroutine_threadsafe(self.__create_task(tools, package), self.loop)
+            return await self.libraryCallback(self.libraryModule, package)
 
-
-def callback(filter, bot = None):
+def callback(filter):
     def decorator(callback):
-        # if bot:
-        #     bot.upload_handler(handler(filter, callback))
-        #     return
-
-        # else:
         def wrap(self):
             return handler(filter, callback, self)
 

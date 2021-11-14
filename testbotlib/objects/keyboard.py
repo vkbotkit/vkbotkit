@@ -1,5 +1,4 @@
-from enum import Enum
-
+from .enums import keyboardcolor, keyboardbutton
 import json
 import six
 
@@ -13,22 +12,6 @@ def sjson_dumps(*args, **kwargs):
     kwargs['separators'] = (',', ':')
 
     return json.dumps(*args, **kwargs)
-
-
-class keyboardcolor(Enum):
-    PRIMARY = 'primary' # blue
-    SECONDARY = 'secondary' # white
-    NEGATIVE = 'negative' # red
-    POSITIVE = 'positive' # green
-
-
-class keyboardbutton(Enum):
-    TEXT = "text"
-    LOCATION = "location"
-    VKPAY = "vkpay"
-    VKAPPS = "open_app"
-    OPENLINK = "open_link"
-    CALLBACK = "callback"
 
 
 class keyboard:

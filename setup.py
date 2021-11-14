@@ -1,11 +1,10 @@
 import setuptools
-from testbotlib import __version__
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="testbotlib",
-    version=__version__,
+    version="1.0a3",
     author="kensoi",
     author_email="kensoi@dshdev.ru",
     description="Asynchronous library for VK Bots API",
@@ -20,7 +19,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    package_dir={"": "src"},
-    packages=setuptools.find_packages(where="src"),
-    python_requires=">=3.7",
+    packages = setuptools.find_packages(include=('testbotlib')),
+    install_requires = ["aiohttp", "six"],
+    python_requires = '>=3.7',
 )

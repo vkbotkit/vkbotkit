@@ -8,6 +8,8 @@ from importlib.util import (
     spec_from_file_location,
     module_from_spec)
 
+from testbotlib.objects import enums
+
 from .. import utils, objects
 
 
@@ -18,7 +20,7 @@ class _logger:
         self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
         if file_log:
-            self.fh = logging.FileHandler('testbotlib_session.log')
+            self.fh = logging.FileHandler('.log')
             self.fh.setLevel(log_level.value)
             self.fh.setFormatter(self.formatter)
             self.logger.addHandler(self.fh)
@@ -103,7 +105,6 @@ class callbacklib:
     def __init__(self, libdir):
         self.__libdir = libdir
         self.handlers = []
-        self.__mentions = []
 
 
     def import_library(self):
@@ -134,11 +135,30 @@ class callbacklib:
         self.handlers.sort(key = lambda h: h.filter.priority)
 
 
-    def set_mentions(self, *args):
-        args = list(args)
-        mentions = filter(lambda x: isinstance(x, str), args)
+    async def parse(self, toolkit, package):
+        if not isinstance(package, objects.data.package):
+            package = await self._convert_event(package)
 
-        if mentions != args:
-            raise Exception("every arg should be str")
+        if not hasattr(package, "toolkit"):
+            package.toolkit = toolkit
 
-        self.__mentions = mentions
+        if not toolkit.replies.check(package):
+            results = await asyncio.gather(*map(lambda h: h.create_task(package), self.handlers))
+
+
+    async def _convert_event(self, event):
+        if hasattr(enums.events, event['type']):
+            event_type = getattr(enums.events, event['type'])
+        else: 
+            raise Exception("Unsupported event")
+
+        if event_type == enums.events.message_new:
+            package_raw = event['object']['message']
+            package_raw['params'] = event['object']['client_info']
+            package_raw['items'] = utils.split_message(package_raw['text'])
+        else:
+            package_raw = event['object']
+
+        package_raw['type'] = event_type
+        
+        return objects.data.package(package_raw)

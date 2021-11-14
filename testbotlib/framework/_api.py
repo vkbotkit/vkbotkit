@@ -163,23 +163,27 @@ class core:
         if "response" in json: 
             json = json['response']
 
-        if "error" in json:
-            raise Exception("response error")
-        
-        elif is_raw:
-            return json
-
-        else:
-            instance = type(json)
-
-            if instance == list:
-                return [objects.data.response(i) for i in json]
+        if isinstance(json, dict):
+            if "error" in json:
+                print(json)
+                raise Exception("response error")
             
-            elif instance == dict:
-                return objects.data.response(json)
+            elif is_raw:
+                return json
 
             else:
+                return objects.data.response(json)
+
+        elif isinstance(json, list):
+            if is_raw:
                 return json
+            
+
+            return [objects.data.response(i) for i in json]
+            
+        else:
+            return json
+
 
     
     def __repr__(self):
@@ -302,7 +306,7 @@ class uploader:
         elif isinstance(files, list):
             files_dict = {}
 
-            for i in range(min(len(files), 5)): # ограничение в пять файлов
+            for i in range(min(len(files), 5)):
                 if isinstance(files[i], (str, bytes)) or issubclass(type(files[i]), FileType):
                     response = None
 

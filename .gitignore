@@ -121,3 +121,5 @@ libragram/
 testcanarybot/
 bot.py
 config.py
+split_util.py
+clear_wall.py
