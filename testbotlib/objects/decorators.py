@@ -1,11 +1,5 @@
-import typing
-from . import exceptions
 
-from .enums import events as enums_events
-from .enums import action as enums_action
 import asyncio
-import threading
-import typing
 
 class handler():
     def __init__(self, filter, libraryCallback, library_module):
@@ -19,9 +13,13 @@ class handler():
 
 
     def run(self):
-        self.loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.loop)
-        self.loop.run_forever()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_forever()
+
+    @property
+    def loop(self):
+        return asyncio.get_event_loop()
     
 
     async def create_task(self, package):

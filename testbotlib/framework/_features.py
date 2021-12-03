@@ -155,7 +155,7 @@ class callbacklib:
         if event_type == enums.events.message_new:
             package_raw = event['object']['message']
             package_raw['params'] = event['object']['client_info']
-            package_raw['items'] = utils.split_message(package_raw['text'])
+            package_raw['items'] = utils.convert_command(package_raw['text'])
         else:
             package_raw = event['object']
 

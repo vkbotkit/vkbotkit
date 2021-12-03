@@ -84,6 +84,7 @@ class longpoll:
         self.__key = ""
         self.__ts = 0.0
         self.__wait = 25
+        self.__rps_delay = 0
 
 
     async def __update_longpoll_server(self, group_id, update_ts: bool = True) -> None:
@@ -102,6 +103,7 @@ class longpoll:
                 'key': self.__key,
                 'ts': self.__ts,
                 'wait': self.__wait,
+                'rps_delay': self.__rps_delay
                 }
         
         response = await self.__http.get(self.__url, params = values)

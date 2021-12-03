@@ -1,4 +1,3 @@
-from types import TracebackType
 from testbotlib.objects.data import response
 from . import _features, _api
 from .. import objects
@@ -6,19 +5,19 @@ import asyncio
 import os
 import random
 import typing
-import traceback
 
 
 class toolkit:
     def __init__ (self, token, assets_path = None):
-        self.__event_loop = asyncio.get_event_loop()
         self.__event_loop.set_exception_handler(self.exception_handler)
         self.assets = _features._assets(self, assets_path)
         self.core = _api.core(token)
         self.replies = _features.replies()
         self.uploader = _api.uploader(self)
 
-    
+    @property
+    def __event_loop(self):
+        return asyncio.get_event_loop()
 
     def exception_handler(self, loop, context):
         typed = type(context['exception'])
@@ -48,7 +47,6 @@ class toolkit:
         while self.core._longpoll._is_polling:
             for event in await self.core._longpoll._check(group_info[0].id):
                 self.__event_loop.create_task(library.parse(self, event))
-
 
     def is_polling(self) -> bool:
         return self.core._longpoll._is_polling

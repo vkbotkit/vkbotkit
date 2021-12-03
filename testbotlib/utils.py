@@ -33,33 +33,18 @@ def filter_folders(libdir):
     return response
 
 
-def split_message(text:str):
-    '''
-    [club195675828|канарейка] помощь -> [<195675828>, 'помощь']
-    '''
-    copt = text
-    REGEX = re.compile(r'\[.*\]', re.MULTILINE)
-    splits = REGEX.findall(text)
-    result = []
+def convert_command(text:str) -> list:
+    items = []
 
-    for join in splits:
-        if join.find("|") != -1:
-            res = text.split(join, 1)
-            if res[0] != '':
-                result.extend(smart_split(res[0]))
-            result.append(mention(join))
-            text = res[1]
-    if text != "":
-        result.extend(smart_split(text))
-    return result
+    for i in filter(lambda item: item != "", re.split(r'(\[.*\])', text)):
+        if i[0] == "[" and i[-1] == "]":
+            items.append(mention(i))
+        
+        else:
+            items.extend(smart_split(i))
+
+    return items
 
 
-def smart_split(text, split_char = " "):
-    if text[0] == " ":
-        text = text[1:]
-    if text[-1] == " ":
-        text = text[:-1]
-
-    res = text.split(split_char)
-    return res
-
+def smart_split(text, split_char = " ") -> filter:
+    return filter(lambda item: item != "", text.split(split_char))

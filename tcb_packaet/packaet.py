@@ -1,4 +1,5 @@
-from .objects import path_separator
+import os
+path_separator = "\\" if os.name == 'nt' else "/"
 
 # Copyright 2021 kensoi
 
