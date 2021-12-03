@@ -1,4 +1,4 @@
-from testbotlib.objects.data import response
+from vkbotkit.objects.data import response
 from . import _features, _api
 from .. import objects
 import asyncio
@@ -62,7 +62,7 @@ class toolkit:
 
 
     def configure_logger(self, log_level: objects.enums.log_level = objects.enums.log_level.INFO, file_log = False, print_log = False):
-        self.__logger = _features._logger("testbotlib", log_level, file_log, print_log)
+        self.__logger = _features._logger("vkbotkit", log_level, file_log, print_log)
 
 
     def log(self, message, log_level: objects.enums.log_level = objects.enums.log_level.INFO) -> None:

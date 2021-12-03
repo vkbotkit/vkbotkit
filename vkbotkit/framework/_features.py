@@ -8,7 +8,7 @@ from importlib.util import (
     spec_from_file_location,
     module_from_spec)
 
-from testbotlib.objects import enums
+from vkbotkit.objects import enums
 
 from .. import utils, objects
 

@@ -4,7 +4,7 @@ import six
 import threading
 import logging
 
-logger = logging.getLogger("testbotlib")
+logger = logging.getLogger("vkbotkit")
 
 from io import IOBase as FileType
 from io import BytesIO

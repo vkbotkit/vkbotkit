@@ -1,16 +1,16 @@
-# TESTBOT-NEWVK
+# VKBotKit
 
 ## Install
 
 ```bash
-$ pip3 install https://github.com/kensoi/testbot-newvk/tarball/main/
+$ pip3 install https://github.com/kensoi/vkbotkit/tarball/dev/
 ```
 
 ## First bot script
 
 ```python
-from testbotlib import librabot
-from testbotlib.objects import decorators, filters, enums
+from vkbotkit import librabot
+from vkbotkit.objects import decorators, filters, enums
 import asyncio
 
 
