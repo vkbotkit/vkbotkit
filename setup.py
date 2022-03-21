@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="vkbotkit",
-    version="1.0a3",
+    version="1.0a5",
     author="kensoi",
     author_email="kensoi@dshdev.ru",
     description="Asynchronous library for VK Bots API",

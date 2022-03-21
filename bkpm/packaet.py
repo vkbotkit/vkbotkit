@@ -1,7 +1,7 @@
 import os
 path_separator = "\\" if os.name == 'nt' else "/"
 
-# Copyright 2021 kensoi
+# Copyright 2022 kensoi
 
 packaet_screen_name = "packaet"
 packaet_message_cover = "[{screen_name}] {message}"

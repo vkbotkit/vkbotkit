@@ -9,7 +9,7 @@ import typing
 
 class toolkit:
     def __init__ (self, token, assets_path = None):
-        self.__event_loop.set_exception_handler(self.exception_handler)
+        self.__logger = None
         self.assets = _features._assets(self, assets_path)
         self.core = _api.core(token)
         self.replies = _features.replies()
@@ -18,11 +18,6 @@ class toolkit:
     @property
     def __event_loop(self):
         return asyncio.get_event_loop()
-
-    def exception_handler(self, loop, context):
-        typed = type(context['exception'])
-        reason = str(context['exception'])
-        print(typed, reason)
 
 
     @property

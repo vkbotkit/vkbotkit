@@ -4,7 +4,7 @@ import typing
 from .objects import path_separator
 from .objects.data import mention
 
-# Copyright 2021 kensoi
+# Copyright 2022 kensoi
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     path_c = os.getcwd()
