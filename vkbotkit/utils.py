@@ -1,10 +1,14 @@
+"""
+Copyright 2022 kensoi
+"""
+
 import os
 import re
 import typing
 from .objects import path_separator
 from .objects.data import mention
 
-# Copyright 2022 kensoi
+path_separator = "\\" if os.name == 'nt' else "/"
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     path_c = os.getcwd()

@@ -1,7 +1,11 @@
+"""
+Copyright 2022 kensoi
+"""
+
 from .framework._app import librabot, toolkit
 from .framework._api import core
 
-__version__ = "1.0a5"
+__version__ = "1.0a6"
 
 __title__ = "vkbotkit"
 __author__ = 'kensoi'
@@ -13,5 +17,3 @@ Documentation is available at kensoi.ru/vkbotkit
 """
 
 __all__ = ['librabot', 'core', 'toolkit']
-
-# Copyright 2022 kensoi

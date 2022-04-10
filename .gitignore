@@ -116,7 +116,6 @@ dmypy.json
 # dev stuff
 assets/
 library/
-examples/
 libragram/
 testcanarybot/
 bot.py
