@@ -2,10 +2,13 @@ from vkbotkit.objects.data import response
 from . import _features, _api
 from .. import objects
 import asyncio
+"""
+Copyright 2022 kensoi
+"""
+
 import os
 import random
 import typing
-
 
 class toolkit:
     def __init__ (self, token, assets_path = None):

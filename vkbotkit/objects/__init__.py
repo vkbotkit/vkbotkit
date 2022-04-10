@@ -1,3 +1,7 @@
+"""
+Copyright 2022 kensoi
+"""
+
 from . import (
     data, decorators, enums, exceptions, keyboard
 )

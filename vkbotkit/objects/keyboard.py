@@ -1,3 +1,7 @@
+"""
+Copyright 2022 kensoi
+"""
+
 from .enums import keyboardcolor, keyboardbutton
 import json
 import six

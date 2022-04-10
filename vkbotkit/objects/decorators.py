@@ -1,3 +1,6 @@
+"""
+Copyright 2022 kensoi
+"""
 
 import asyncio
 

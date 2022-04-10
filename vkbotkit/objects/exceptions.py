@@ -1,3 +1,7 @@
+"""
+Copyright 2022 kensoi
+"""
+
 class MethodError(Exception):
     pass
 

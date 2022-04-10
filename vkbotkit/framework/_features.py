@@ -1,3 +1,7 @@
+"""
+Copyright 2022 kensoi
+"""
+
 import asyncio
 import os
 import time
