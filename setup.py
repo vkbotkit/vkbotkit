@@ -19,7 +19,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages = setuptools.find_packages(include=('vkbotkit')),
+    packages = setuptools.find_packages(include=('bkpm', "vkbotkit")),
     install_requires = ["aiohttp", "six"],
     python_requires = '>=3.7',
 )
