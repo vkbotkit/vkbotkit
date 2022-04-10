@@ -13,7 +13,7 @@ __license__ = 'Apache v2'
 __copyright__ = 'Copyright 2022 kensoi'
 
 __doc__ = "kensoi/vkbotkit, " + __version__ + """
-Documentation is available at kensoi.ru/vkbotkit
+Documentation is available at dshdev.ru/vkbotkit
 """
 
 __all__ = ['librabot', 'core', 'toolkit']
