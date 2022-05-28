@@ -6,7 +6,6 @@
 $ pip3 install https://github.com/kensoi/vkbotkit/tarball/dev/
 ```
 
-## Bot templates
+## Bot template
 
-[Multilib template](https://github.com/kensoi/vkbotkit_bot_template)  
-[Onelib template](https://gist.github.com/kensoi/5427e567d4e02d8f0fac22c5a9f9118a)
+[vkbotkit template](https://github.com/kensoi/vkbotkit_template)
