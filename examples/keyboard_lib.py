@@ -1,12 +1,11 @@
+from vkbotkit.objects import decorators, filters, enums, library_module
+from vkbotkit.objects.keyboard import *
+
 """
 Copyright 2022 kensoi
 """
 
-from vkbotkit.objects import decorators, filters, enums, library_module
-from vkbotkit.objects.keyboard import *
-
-
-class basic_lib(library_module):
+class Main(library_module):
     async def start(self, toolkit):
         self.keyboardTest = keyboard(one_time = False, inline = True)
         self.keyboardTest2 = keyboard(one_time = False, inline = True)

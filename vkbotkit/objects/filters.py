@@ -1,10 +1,11 @@
+from . import enums
+from . import data
+import typing
+
 """
 Copyright 2022 kensoi
 """
 
-import typing
-from . import enums
-from . import data
 class Filter:
     def __init__(self) -> None:
         self.priority = 0

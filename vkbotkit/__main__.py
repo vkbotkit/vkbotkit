@@ -1,10 +1,11 @@
+from .utils import path_separator
+import os
+import sys
+
 """
 Copyright 2022 kensoi
 """
 
-import os
-import sys
-from .utils import path_separator
 packaet_screen_name = "packaet"
 packaet_message_cover = "[{screen_name}] {message}"
 

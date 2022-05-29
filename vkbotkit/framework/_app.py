@@ -1,14 +1,14 @@
-from vkbotkit.objects.data import response
 from . import _features, _api
 from .. import objects
+from ..objects.data import response
 import asyncio
-"""
-Copyright 2022 kensoi
-"""
-
 import os
 import random
 import typing
+
+"""
+Copyright 2022 kensoi
+"""
 
 class toolkit:
     def __init__ (self, token, assets_path = None):

@@ -1,20 +1,18 @@
-"""
-Copyright 2022 kensoi
-"""
-
+from .. import utils, objects
+from ..objects import enums
+from importlib.util import (
+    spec_from_file_location,
+    module_from_spec)
 import asyncio
 import os
 import time
 import typing
 import logging
 import logging.config
-from importlib.util import (
-    spec_from_file_location,
-    module_from_spec)
 
-from vkbotkit.objects import enums
-
-from .. import utils, objects
+"""
+Copyright 2022 kensoi
+"""
 
 
 class _logger:

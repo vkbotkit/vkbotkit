@@ -1,8 +1,8 @@
+import typing
+
 """
 Copyright 2022 kensoi
 """
-
-import typing
 
 class expression:
     __slots__ = ('type', 'value')

@@ -1,8 +1,8 @@
+from enum import Enum
+
 """
 Copyright 2022 kensoi
 """
-
-from enum import Enum
 
 class events(Enum):
     message_new = 'message_new'

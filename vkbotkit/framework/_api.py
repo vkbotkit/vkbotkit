@@ -1,19 +1,18 @@
-"""
-Copyright 2022 kensoi
-"""
-
+from io import IOBase
+from io import BytesIO
+from .. import objects
 import aiohttp
 import asyncio
 import six
 import threading
 import logging
 
+"""
+Copyright 2022 kensoi
+"""
+
 logger = logging.getLogger("vkbotkit")
 
-from io import IOBase as FileType
-from io import BytesIO
-
-from .. import objects
 
 class client_session():
     """
@@ -295,7 +294,7 @@ class uploader:
 
 
     def convertAsset(self, files, sign = 'file'):
-        if isinstance(files, (str, bytes)) or issubclass(type(files), FileType):
+        if isinstance(files, (str, bytes)) or issubclass(type(files), IOBase):
             response = None
 
             if isinstance(files, str): 
@@ -313,7 +312,7 @@ class uploader:
             files_dict = {}
 
             for i in range(min(len(files), 5)):
-                if isinstance(files[i], (str, bytes)) or issubclass(type(files[i]), FileType):
+                if isinstance(files[i], (str, bytes)) or issubclass(type(files[i]), IOBase):
                     response = None
 
                     if isinstance(files[i], str): 

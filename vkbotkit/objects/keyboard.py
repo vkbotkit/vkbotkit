@@ -1,10 +1,10 @@
-"""
-Copyright 2022 kensoi
-"""
-
 from .enums import keyboardcolor, keyboardbutton
 import json
 import six
+
+"""
+Copyright 2022 kensoi
+"""
 
 MAX_BUTTONS_ON_LINE = 5
 MAX_DEFAULT_LINES = 10

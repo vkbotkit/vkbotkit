@@ -1,12 +1,12 @@
-"""
-Copyright 2022 kensoi
-"""
-
+from .objects import path_separator
+from .objects.data import mention
 import os
 import re
 import typing
-from .objects import path_separator
-from .objects.data import mention
+
+"""
+Copyright 2022 kensoi
+"""
 
 path_separator = "\\" if os.name == 'nt' else "/"
 
@@ -52,3 +52,45 @@ def convert_command(text:str) -> list:
 
 def smart_split(text, split_char = " ") -> filter:
     return filter(lambda item: item != "", text.split(split_char))
+
+
+def convert_size(size: str):
+    if size in ["any", "любое"]:
+        return 0
+
+    elif size in ["sm", "small", "маленькое", "короткое"]:
+        return 1
+
+    elif size in ["md", "medium", "среднее"]:
+        return 2
+
+    elif size in ["lg", "large", "большое", "длинное"]:
+        return 3
+
+    else:
+        raise ValueError(f"Unknown size {size}")
+
+
+def remove_duplicates(array):
+    return list(set(array))
+
+
+def censor_result(result: str): # copied from jieggii/witless
+    blacklisted_tokens = [
+        "сова никогда не спит",
+        "#cинийкит",
+        "#рaзбудименяв420",
+        "all",
+        "everyone",
+    ]
+    links = remove_duplicates(
+        re.findall(r"[^ (){\}\[\]\'\";]+\.[^ (){\}\[\]\'\";]+", result)
+    )
+
+    for link in links:
+        result = result.replace(link, "[ссылка удалена]")
+
+    for token in blacklisted_tokens:
+        result = result.replace(token, "*" * len(token))
+
+    return result

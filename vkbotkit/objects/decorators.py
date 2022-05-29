@@ -1,8 +1,8 @@
+import asyncio
+
 """
 Copyright 2022 kensoi
 """
-
-import asyncio
 
 class handler():
     def __init__(self, filter, libraryCallback, library_module):
