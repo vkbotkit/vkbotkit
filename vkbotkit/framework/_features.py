@@ -16,7 +16,15 @@ Copyright 2022 kensoi
 
 
 class _logger:
+    """
+    docstring patch
+    """
+
     def __init__(self, logger_name = None, log_level: objects.enums.log_level = objects.enums.log_level.INFO, file_log = False, print_log = False):
+        """
+        docstring patch
+        """
+
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(log_level.value)
         self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -37,7 +45,15 @@ class _logger:
 
 
 class _assets:
+    """
+    docstring patch
+    """
+
     def __init__(self, sdk, assets = None):
+        """
+        docstring patch
+        """
+
         if not assets:
             assets = objects.path_separator.join([os.getcwd(),"assets", ""])
 
@@ -57,6 +73,10 @@ class _assets:
 
 
     def __call__(self, *args, **kwargs):
+        """
+        docstring patch
+        """
+
         args = list(args)
         if len(args) > 0: 
             args[0] = self.__path + args[0]
@@ -66,19 +86,39 @@ class _assets:
 
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """
+        docstring patch
+        """
+
         pass
 
 
 class replies:
+    """
+    docstring patch
+    """
+
     def __init__(self) -> None:
+        """
+        docstring patch
+        """
+
         self.__wait_list = {}
 
     def check(self, pkg, from_poll = False):
+        """
+        docstring patch
+        """
+
         for task_id, task_obj in self.__wait_list.items():
             if task_obj.check(pkg): return True 
             
 
     async def get(self, pkg):
+        """
+        docstring patch
+        """
+
         task_obj = reply_task(pkg)
         task_id = f"${time.time()}_{pkg.peer_id}_{pkg.from_id}"
         self.__wait_list[task_id] = task_obj
@@ -91,12 +131,24 @@ class replies:
 
 
 class reply_task:
+    """
+    docstring patch
+    """
+
     def __init__(self, pkg):
+        """
+        docstring patch
+        """
+
         self.__chat = pkg.peer_id
         self.__from = pkg.from_id
         self.ready = False
         
     def check(self, pkg):
+        """
+        docstring patch
+        """
+
         if self.__chat == pkg.peer_id and self.__from == pkg.from_id:
             self.ready = True
             self.pkg = pkg
@@ -104,12 +156,24 @@ class reply_task:
 
 
 class callbacklib:
+    """
+    раздел vkbotkit для работы с библиотеками
+    """
+
     def __init__(self, libdir):
+        """
+        docstring patch
+        """
+
         self.__libdir = libdir
         self.handlers = []
 
 
     def import_library(self):
+        """
+        Импортировать все плагины из каталога library (либо иного другого)
+        """
+
         if not self.__libdir:
             self.__libdir = os.getcwd() + objects.path_separator + 'library'
 
@@ -133,22 +197,34 @@ class callbacklib:
 
 
     def import_module(self, lib = None):
+        """
+        Импортировать специфический модуль
+        """
+
         self.handlers.extend(lib()._handlers)
         self.handlers.sort(key = lambda h: h.filter.priority)
 
 
     async def parse(self, toolkit, package):
+        """
+        Обработать уведомление с помощью библиотек
+        """
+
         if not isinstance(package, objects.data.package):
             package = await self._convert_event(package)
 
         if not hasattr(package, "toolkit"):
             package.toolkit = toolkit
 
-        if not toolkit.replies.check(package):
+        if not toolkit.replies.check(package): # проверяем, ожидается ли ответ от адресата данного уведомления
             results = await asyncio.gather(*map(lambda h: h.create_task(package), self.handlers))
 
 
     async def _convert_event(self, event):
+        """
+        Обработать уведомление по типу
+        """
+
         if hasattr(enums.events, event['type']):
             event_type = getattr(enums.events, event['type'])
         else: 

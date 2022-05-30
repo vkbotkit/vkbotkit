@@ -1,5 +1,3 @@
-from .utils import path_separator
-import os
 import sys
 
 """
@@ -10,6 +8,10 @@ packaet_screen_name = "packaet"
 packaet_message_cover = "[{screen_name}] {message}"
 
 def message(message):
+    """
+    docstring patch
+    """
+
     print(packaet_message_cover.format(screen_name = packaet_screen_name, message = message))
 
 if __name__ == "__main__":

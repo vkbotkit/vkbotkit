@@ -8,6 +8,7 @@ import threading
 import logging
 
 """
+Модули для работы с VK Bots API
 Copyright 2022 kensoi
 """
 
@@ -16,28 +17,43 @@ logger = logging.getLogger("vkbotkit")
 
 class client_session():
     """
-    wrapper over about aiohttp.ClientSession to avoid errors about loops in threads
-    headers: dict()
+    Обёртка над aiohttp.ClientSession для избежания ошибок в потоках
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        docstring patch
+        """
+
         self.__args = args
         self.__kwargs = kwargs
         self.__sessions = []
 
 
     def create_session(self, thread: threading.Thread) -> None:
+        """
+        docstring patch
+        """
+
         if not hasattr(thread, 'session'): 
             thread.session = aiohttp.ClientSession(*self.__args, **self.__kwargs)
             self.__sessions.append(thread.session)
 
 
     def __del__(self):
+        """
+        docstring patch
+        """
+
         for session in self.__sessions:
             asyncio.get_event_loop().run_until_complete(session.close())
         
 
     def __getattr__(self, name):
+        """
+        docstring patch
+        """
+
         if name in dir(aiohttp.ClientSession):
             thread = threading.current_thread()
             self.create_session(thread)
@@ -45,18 +61,35 @@ class client_session():
 
 
     def __repr__(self):
-        return f"<testcanarybot.framework._api.client_session>"
+        """
+        docstring patch
+        """
+
+        return f"<vkbotkit.framework._api.client_session>"
+
 
 class api:
+    """
+    Упрощённый доступ к api.vk.com/method
+    """
+
     __slots__ = ('_http', '_method', '_string')
 
     def __init__(self, http, method, string = None):
+        """
+        docstring patch
+        """
+
         self._http = http
         self._method = method    
         self._string = string
 
 
     def __getattr__(self, method):
+        """
+        docstring patch
+        """
+
         self._string = self._string + "." if self._string else ""
 
         return api(
@@ -66,6 +99,10 @@ class api:
 
 
     async def __call__(self, **kwargs):
+        """
+        docstring patch
+        """
+
         for k, v in six.iteritems(kwargs):
             if isinstance(v, (list, tuple)):
                 kwargs[k] = ','.join(str(x) for x in v)
@@ -74,11 +111,23 @@ class api:
 
 
     def __repr__(self):
-        return f"<testcanarybot.framework._api.api>"
+        """
+        docstring patch
+        """
+
+        return f"<vkbotkit.framework._api.api>"
 
 
 class longpoll:
+    """
+    docstring patch
+    """
+
     def __init__(self, http, method) -> None:
+        """
+        docstring patch
+        """
+
         self.__http = http
         self.__method = method
         self._is_polling = False
@@ -91,6 +140,10 @@ class longpoll:
 
 
     async def __update_longpoll_server(self, group_id, update_ts: bool = True) -> None:
+        """
+        Обновить сервер
+        """
+
         response = await self.__method('groups.getLongPollServer', {'raw': True, 'group_id': group_id})
 
         if update_ts: 
@@ -102,6 +155,10 @@ class longpoll:
 
 
     async def _check(self, group_id):
+        """
+        Запросить уведомления с сервера
+        """
+
         values = {'act': 'a_check',
                 'key': self.__key,
                 'ts': self.__ts,
@@ -132,11 +189,23 @@ class longpoll:
     
 
     def __repr__(self):
-        return f"<testcanarybot.framework._api.longpoll>"
+        """
+        docstring patch
+        """
+
+        return f"<vkbotkit.framework._api.longpoll>"
 
 
 class core:
+    """
+    docstring patch
+    """
+
     def __init__(self, token):
+        """
+        docstring patch
+        """
+
         self.__token = token
         self.__v = "5.131"
 
@@ -147,10 +216,18 @@ class core:
 
     @property
     def api_url(self):
+        """
+        docstring patch
+        """
+
         return "https://api.vk.com/method/"
 
 
     async def __method(self, method="groups.getById", params = {}):
+        """
+        docstring patch
+        """
+
         request_data = params
         is_raw = request_data.pop("raw", False)
 
@@ -192,17 +269,33 @@ class core:
 
     
     def __repr__(self):
+        """
+        docstring patch
+        """
+
         return f"<testcanarybot.framework._api.core>"
 
 
 class uploader:
+    """
+    Инструменты для работы с медиафайлами
+    """
+
     __slots__ = ('__sdk')
 
     def __init__(self, sdk):
+        """
+        docstring patch
+        """
+
         self.__sdk = sdk
 
 
-    async def photo_messages(self, photos):
+    async def photo_messages(self, photos:list):
+        """
+        Загрузить фотографии
+        """
+
         response = await self.__sdk.api.photos.getMessagesUploadServer(peer_id = 0)
         response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photos))
         response = await response.json(content_type = None)
@@ -211,6 +304,10 @@ class uploader:
 
         
     async def photo_group_widget(self, photo, image_type):
+        """
+        docstring patch
+        """
+
         response = await self.__sdk.api.appWidgets.getGroupImageUploadServer(image_type = image_type)
         response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photo))
         response = await response.json(content_type = None)
@@ -219,6 +316,10 @@ class uploader:
 
 
     async def photo_chat(self, photo, peer_id):
+        """
+        Обновить фотографию беседы
+        """
+
         if peer_id < 2000000000: 
             raise ValueError("Incorrect peer_id")
 
@@ -234,6 +335,10 @@ class uploader:
 
 
     async def document(self, document, title=None, tags=None, peer_id=None, doc_type = 'doc', to_wall = None):
+        """
+        Отправить файл (документ)
+        """
+
         values = {
             'peer_id': peer_id,
             'type': doc_type
@@ -250,12 +355,19 @@ class uploader:
 
 
     async def audio_message(self, audio, peer_id=None):
+        """
+        Отправить голосовое сообщение
+        """
+
         return await self.document(audio, doc_type = 'audio_message', peer_id = peer_id)
 
 
     async def story(self, file, file_type,
               reply_to_story=None, link_text=None,
               link_url=None):
+        """
+        Загрузить историю
+        """
 
         if file_type == 'photo':
             method = self.__sdk.api.stories.getPhotoUploadServer
@@ -294,6 +406,10 @@ class uploader:
 
 
     def convertAsset(self, files, sign = 'file'):
+        """
+        Вспомогательная функция для работы с файлами из папки assets
+        """
+
         if isinstance(files, (str, bytes)) or issubclass(type(files), IOBase):
             response = None
 
@@ -334,4 +450,4 @@ class uploader:
 
 
     def __repr__(self):
-        return f"<testcanarybot.framework._api.uploader>"
+        return f"<vkbotkit.framework._api.uploader>"

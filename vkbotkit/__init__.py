@@ -5,7 +5,7 @@ from .framework._api import core
 Copyright 2022 kensoi
 """
 
-__version__ = "1.0a7"
+__version__ = "1.0a8"
 __title__ = "vkbotkit"
 __author__ = 'kensoi'
 __license__ = 'Apache v2'

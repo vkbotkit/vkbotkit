@@ -11,6 +11,10 @@ Copyright 2022 kensoi
 path_separator = "\\" if os.name == 'nt' else "/"
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
+    """
+    docstring patch
+    """
+
     path_c = os.getcwd()
     if path:
         if path[0] == '.':
@@ -22,6 +26,10 @@ def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
 
 
 def filter_folders(libdir):
+    """
+    docstring patch
+    """
+
     files_list = os.listdir(libdir)
     response = []
 
@@ -38,6 +46,10 @@ def filter_folders(libdir):
 
 
 def convert_command(text:str) -> list:
+    """
+    docstring patch
+    """
+
     items = []
 
     for i in filter(lambda item: item != "", re.split(r'(\[.*\])', text)):
@@ -51,10 +63,18 @@ def convert_command(text:str) -> list:
 
 
 def smart_split(text, split_char = " ") -> filter:
+    """
+    docstring patch
+    """
     return filter(lambda item: item != "", text.split(split_char))
 
 
 def convert_size(size: str):
+    """
+    docstring patch
+    """
+
+        
     if size in ["any", "любое"]:
         return 0
 
@@ -72,10 +92,17 @@ def convert_size(size: str):
 
 
 def remove_duplicates(array):
+    """
+    Убрать дубликаты
+    """
     return list(set(array))
 
 
 def censor_result(result: str): # copied from jieggii/witless
+    """
+    цензурировать запрещённые слова
+    """
+
     blacklisted_tokens = [
         "сова никогда не спит",
         "#cинийкит",

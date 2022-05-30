@@ -1,11 +1,9 @@
 # VKBotKit
-
-## Install
-
+![vkbotkit logo](https://github.com/kensoi/vkbotkit/raw/gh-pages/img/logo150.png)
+## Установка
 ```sh
-$ pip3 install https://github.com/kensoi/vkbotkit/tarball/dev/
+pip install https://github.com/kensoi/vkbotkit/tarball/dev/
 ```
 
-## Bot template
-
-[vkbotkit template](https://github.com/kensoi/vkbotkit_template)
+## Полезные ссылки
+[Рабочий шаблон](https://github.com/kensoi/vkbotkit_app)

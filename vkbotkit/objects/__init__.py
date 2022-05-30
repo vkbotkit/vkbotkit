@@ -10,7 +10,14 @@ import os
 path_separator = "\\" if os.name == 'nt' else "/"
 
 class library_module:
+    """
+    Объект плагина
+    """
     def __init__(self):
+        """
+        docstring patch
+        """
+
         attrs_a = dir(self)
         attrs_b = dir(object())
 
