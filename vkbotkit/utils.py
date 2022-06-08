@@ -1,14 +1,12 @@
-from .objects import path_separator
-from .objects.data import mention
-import os
-import re
-import typing
-
 """
 Copyright 2022 kensoi
 """
+import os
+import re
+import typing
+from .objects import PATH_SEPARATOR
+from .objects.data import Mention
 
-path_separator = "\\" if os.name == 'nt' else "/"
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     """
@@ -22,7 +20,7 @@ def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
         else:
             path_c = path
 
-    return path_separator.join([path_c, path_type])
+    return PATH_SEPARATOR.join([path_c, path_type])
 
 
 def filter_folders(libdir):
@@ -34,14 +32,14 @@ def filter_folders(libdir):
     response = []
 
     for name in files_list:
-        obj_path = path_separator.join([libdir, name])
+        obj_path = PATH_SEPARATOR.join([libdir, name])
         if os.path.isfile(obj_path):
             if name.endswith(".py"):
                 response.append(obj_path)
 
         elif "__init__.py" in os.listdir(obj_path):
-            response.append(path_separator.join([obj_path, "__init__.py"]))
-    
+            response.append(PATH_SEPARATOR.join([obj_path, "__init__.py"]))
+
     return response
 
 
@@ -54,8 +52,8 @@ def convert_command(text:str) -> list:
 
     for i in filter(lambda item: item != "", re.split(r'(\[.*\])', text)):
         if i[0] == "[" and i[-1] == "]":
-            items.append(mention(i))
-        
+            items.append(Mention(i))
+
         else:
             items.extend(smart_split(i))
 
@@ -74,7 +72,6 @@ def convert_size(size: str):
     docstring patch
     """
 
-        
     if size in ["any", "любое"]:
         return 0
 

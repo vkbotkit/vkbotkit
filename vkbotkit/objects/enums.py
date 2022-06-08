@@ -1,83 +1,95 @@
-from enum import Enum
-
 """
 Copyright 2022 kensoi
 """
 
-class events(Enum):
-    message_new = 'message_new'
-    message_edit = 'message_edit'
-    message_allow = 'message_allow'
-    message_typing_state = 'message_typing_state'
-    message_reply = 'message_reply'
-    message_deny = 'message_deny'
-    message_event = 'message_event'
-    
-    photo_new = 'photo_new'
-    photo_comment_new = 'photo_comment_new'
-    photo_comment_edit = 'photo_comment_edit'
-    photo_comment_restore = 'photo_comment_restore'
-    photo_comment_delete = 'photo_comment_delete'
+from enum import Enum
 
-    audio_new = 'audio_new'
+class Events(Enum):
+    """
+    Longpoll events
+    https://dev.vk.com/method/groups.getLongPollSettings
+    """
 
-    video_new = 'video_new'
-    video_comment_new = 'video_comment_new'
-    video_comment_edit = 'video_comment_edit'
-    video_comment_restore = 'video_comment_restore'
-    video_comment_delete = 'video_comment_delete'
+    MESSAGE_NEW = 'message_new'
+    MESSAGE_EDIT = 'message_edit'
+    MESSAGE_ALLOW = 'message_allow'
+    MESSAGE_TYPING_STATE = 'message_typing_state'
+    MESSAGE_REPLY = 'message_reply'
+    MESSAGE_DENY = 'message_deny'
+    MESSAGE_EVENT = 'message_event'
 
-    wall_post_new = 'wall_post_new'
-    wall_repost = 'wall_repost'
-    wall_reply_new = 'wall_reply_new'
-    wall_reply_edit = 'wall_reply_edit'
-    wall_reply_restore = 'wall_reply_restore'
-    wall_reply_delete = 'wall_reply_delete'
+    PHOTO_NEW = 'photo_new'
+    PHOTO_COMMENT_NEW = 'photo_comment_new'
+    PHOTO_COMMENT_EDIT = 'photo_comment_edit'
+    PHOTO_COMMENT_RESTORE = 'photo_comment_restore'
+    PHOTO_COMMENT_DELETE = 'photo_comment_delete'
 
-    board_post_new = 'board_post_new'
-    board_post_edit = 'board_post_edit'
-    board_post_restore = 'board_post_restore'
-    board_post_delete = 'board_post_delete'
+    AUDIO_NEW = 'audio_new'
 
-    market_comment_new = 'market_comment_new'
-    market_comment_edit = 'market_comment_edit'
-    market_comment_restore = 'market_comment_restore'
-    market_comment_delete = 'market_comment_delete'
-    market_order_new = 'market_order_new'
-    market_order_edit = 'market_order_edit'
+    VIDEO_NEW = 'video_new'
+    VIDEO_COMMENT_NEW = 'video_comment_new'
+    VIDEO_COMMENT_EDIT = 'video_comment_edit'
+    VIDEO_COMMENT_RESTORE = 'video_comment_restore'
+    VIDEO_COMMENT_DELETE = 'video_comment_delete'
 
-    group_leave = 'group_leave'
-    group_join = 'group_join'
+    WALL_POST_NEW = 'wall_post_new'
+    WALL_REPOST = 'wall_repost'
+    WALL_REPLY_NEW = 'wall_reply_new'
+    WALL_REPLY_EDIT = 'wall_reply_edit'
+    WALL_REPLY_RESTORE = 'wall_reply_restore'
+    WALL_REPLY_DELETE = 'wall_reply_delete'
 
-    user_block = 'user_block'
-    user_unblock = 'user_unblock'
+    BOARD_POST_NEW = 'board_post_new'
+    BOARD_POST_EDIT = 'board_post_edit'
+    BOARD_POST_RESTORE = 'board_post_restore'
+    BOARD_POST_DELETE = 'board_post_delete'
 
-    poll_vote_new = 'poll_vote_new'
+    MARKET_COMMENT_NEW = 'market_comment_new'
+    MARKET_COMMENT_EDIT = 'market_comment_edit'
+    MARKET_COMMENT_RESTORE = 'market_comment_restore'
+    MARKET_COMMENT_DELETE = 'market_comment_delete'
+    MARKET_ORDER_NEW = 'market_order_new'
+    MARKET_ORDER_EDIT = 'market_order_edit'
 
-    group_officers_edit = 'group_officers_edit'
-    group_change_settings = 'group_change_settings'
-    group_change_photo = 'group_change_photo'
+    GROUP_LEAVE = 'group_leave'
+    GROUP_JOIN = 'group_join'
 
-    vkpay_transaction = 'vkpay_transaction'
-    app_payload = 'app_payload'
+    USER_BLOCK = 'user_block'
+    USER_UNBLOCK = 'user_unblock'
 
-    like_add = 'like_add'
-    like_remove = 'like_remove'
+    POLL_VOTE_NEW = 'poll_vote_new'
 
+    GROUP_OFFICERS_EDIT = 'group_officers_edit'
+    GROUP_CHANGE_SETTINGS = 'group_change_settings'
+    GROUP_CHANGE_PHOTO = 'group_change_photo'
 
-class action(Enum):
-    chat_photo_update = "chat_photo_update"
-    chat_photo_remove = "chat_photo_remove"
-    chat_create = "chat_create"
-    chat_title_update = "chat_title_update"
-    chat_invite_user = "chat_invite_user"
-    chat_kick_user = "chat_kick_user"
-    chat_pin_message = "chat_pin_message"
-    chat_unpin_message = "chat_unpin_message"
-    chat_invite_user_by_link = "chat_invite_user_by_link"
+    VKPAY_TRANSACTION = 'vkpay_transaction'
+    APP_PAYLOAD = 'app_payload'
+
+    LIKE_ADD = 'like_add'
+    LIKE_REMOVE = 'like_remove'
 
 
-class log_level(Enum):
+class Action(Enum):
+    """
+    Уровень логгирования
+    https://dev.vk.com/api/user-long-poll/getting-started#Вложения%20и%20дополнительные%20данные
+    """
+    CHAT_PHOTO_UPDATE = "chat_photo_update"
+    CHAT_PHOTO_REMOVE = "chat_photo_remove"
+    CHAT_CREATE = "chat_create"
+    CHAT_TITLE_UPDATE = "chat_title_update"
+    CHAT_INVITE_USER = "chat_invite_user"
+    CHAT_KICK_USER = "chat_kick_user"
+    CHAT_PIN_MESSAGE = "chat_pin_message"
+    CHAT_UNPIN_MESSAGE = "chat_unpin_message"
+    CHAT_INVITE_USER_BY_LINK = "chat_invite_user_by_link"
+
+
+class LogLevel(Enum):
+    """
+    Уровень логгирования
+    """
     CRITICAL = 50
     ERROR = 40
     WARNING = 30
@@ -85,34 +97,48 @@ class log_level(Enum):
     DEBUG = 10
     NOTSET = 0
 
-class name_cases(Enum):
-    nom = 'nom'
-    gen = 'gen'
-    dat = 'dat'
-    acc = 'acc'
-    ins = 'ins'
-    abl = 'abl'
+class NameCases(Enum):
+    """
+    Падежи слов
+    """
+    NOM = 'nom'
+    GEN = 'gen'
+    DAT = 'dat'
+    ACC = 'acc'
+    INS = 'ins'
+    ABL = 'abl'
 
-class values(Enum):
-    empty = ''
-    log = 'log'
-    tumbler = 'tumbler'
-    workspace = 'workspace'
+class Values(Enum):
+    """
+    Рабочие имена
+    """
+    EMPTY = ''
+    LOG = 'log'
+    TUMBLER = 'tumbler'
+    WORKSPACE = 'workspace'
 
-    expr = 'expr'
+    EXPR = 'expr'
 
 
-    hidden = '$$$'
+    HIDDEN = '$$$'
 
 
-class keyboardcolor(Enum):
+class KeyboardColor(Enum):
+    """
+    Доступные цвета кнопок на клавиатуре
+    https://dev.vk.com/api/bots/development/keyboard
+    """
     PRIMARY = 'primary' # blue
     SECONDARY = 'secondary' # white
     NEGATIVE = 'negative' # red
     POSITIVE = 'positive' # green
 
 
-class keyboardbutton(Enum):
+class KeyboardButton(Enum):
+    """
+    Доступные типы кнопок на клавиатуре
+    https://dev.vk.com/api/bots/development/keyboard
+    """
     TEXT = "text"
     LOCATION = "location"
     VKPAY = "vkpay"

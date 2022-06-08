@@ -1,30 +1,26 @@
-from io import IOBase
-from io import BytesIO
-from .. import objects
-import aiohttp
-import asyncio
-import six
-import threading
-import logging
-
 """
 Модули для работы с VK Bots API
 Copyright 2022 kensoi
 """
 
+import asyncio
+import logging
+import threading
+from io import IOBase
+from io import BytesIO
+import aiohttp
+import six
+from .. import objects
+
 logger = logging.getLogger("vkbotkit")
 
 
-class client_session():
+class ClientSession():
     """
     Обёртка над aiohttp.ClientSession для избежания ошибок в потоках
     """
 
     def __init__(self, *args, **kwargs):
-        """
-        docstring patch
-        """
-
         self.__args = args
         self.__kwargs = kwargs
         self.__sessions = []
@@ -35,25 +31,17 @@ class client_session():
         docstring patch
         """
 
-        if not hasattr(thread, 'session'): 
+        if not hasattr(thread, 'session'):
             thread.session = aiohttp.ClientSession(*self.__args, **self.__kwargs)
             self.__sessions.append(thread.session)
 
 
     def __del__(self):
-        """
-        docstring patch
-        """
-
         for session in self.__sessions:
             asyncio.get_event_loop().run_until_complete(session.close())
-        
+
 
     def __getattr__(self, name):
-        """
-        docstring patch
-        """
-
         if name in dir(aiohttp.ClientSession):
             thread = threading.current_thread()
             self.create_session(thread)
@@ -61,14 +49,10 @@ class client_session():
 
 
     def __repr__(self):
-        """
-        docstring patch
-        """
-
-        return f"<vkbotkit.framework._api.client_session>"
+        return "<vkbotkit.framework._api.ClientSession>"
 
 
-class api:
+class API:
     """
     Упрощённый доступ к api.vk.com/method
     """
@@ -81,7 +65,7 @@ class api:
         """
 
         self._http = http
-        self._method = method    
+        self._method = method
         self._string = string
 
 
@@ -92,7 +76,7 @@ class api:
 
         self._string = self._string + "." if self._string else ""
 
-        return api(
+        return API(
             self._http, self._method,
             (self._string if self._method else '') + method
         )
@@ -103,9 +87,9 @@ class api:
         docstring patch
         """
 
-        for k, v in six.iteritems(kwargs):
-            if isinstance(v, (list, tuple)):
-                kwargs[k] = ','.join(str(x) for x in v)
+        for key, value in six.iteritems(kwargs):
+            if isinstance(value, (list, tuple)):
+                kwargs[key] = ','.join(str(x) for x in value)
 
         return await self._method(self._string, kwargs)
 
@@ -115,19 +99,15 @@ class api:
         docstring patch
         """
 
-        return f"<vkbotkit.framework._api.api>"
+        return "<vkbotkit.framework._api.API>"
 
 
-class longpoll:
+class Longpoll:
     """
-    docstring patch
+    Объект для прослушки VKBots Longpoll
     """
 
     def __init__(self, http, method) -> None:
-        """
-        docstring patch
-        """
-
         self.__http = http
         self.__method = method
         self._is_polling = False
@@ -144,9 +124,12 @@ class longpoll:
         Обновить сервер
         """
 
-        response = await self.__method('groups.getLongPollServer', {'raw': True, 'group_id': group_id})
+        response = await self.__method('groups.getLongPollServer', {
+            'raw': True,
+            'group_id': group_id}
+            )
 
-        if update_ts: 
+        if update_ts:
             self.__ts = response['ts']
         self.__key = response['key']
         self.__url = response['server']
@@ -165,7 +148,7 @@ class longpoll:
                 'wait': self.__wait,
                 'rps_delay': self.__rps_delay
                 }
-        
+
         response = await self.__http.get(self.__url, params = values)
         response = await response.json(content_type = None)
 
@@ -182,23 +165,19 @@ class longpoll:
 
         elif response['failed'] == 3:
             await self.__update_longpoll_server(group_id)
-            
+
         logger.log(10, "polled once for page with id = %i", group_id)
 
         return []
-    
+
 
     def __repr__(self):
-        """
-        docstring patch
-        """
-
-        return f"<vkbotkit.framework._api.longpoll>"
+        return "<vkbotkit.framework._api.Longpoll>"
 
 
-class core:
+class Core:
     """
-    docstring patch
+    Ядро бота
     """
 
     def __init__(self, token):
@@ -209,9 +188,9 @@ class core:
         self.__token = token
         self.__v = "5.131"
 
-        self.__session = client_session(trust_env=True)
-        self._api = api(self.__session, self.__method)
-        self._longpoll = longpoll(self.__session, self.__method)
+        self.__session = ClientSession(trust_env=True)
+        self._api = API(self.__session, self.__method)
+        self._longpoll = Longpoll(self.__session, self.__method)
 
 
     @property
@@ -223,12 +202,12 @@ class core:
         return "https://api.vk.com/method/"
 
 
-    async def __method(self, method="groups.getById", params = {}):
+    async def __method(self, method="groups.getById", params = None):
         """
         docstring patch
         """
 
-        request_data = params
+        request_data = params if params else {}
         is_raw = request_data.pop("raw", False)
 
         if "access_token" not in request_data:
@@ -242,52 +221,42 @@ class core:
         result = await self.__session.post(self.api_url + method, data = request_data)
         json = await result.json(content_type=None)
 
-        if "response" in json: 
+        if "response" in json:
             json = json['response']
 
         if isinstance(json, dict):
             if "error" in json:
                 print(json)
                 raise Exception("response error")
-            
+
             elif is_raw:
                 return json
 
             else:
-                return objects.data.response(json)
+                return objects.data.Response(json)
 
         elif isinstance(json, list):
             if is_raw:
                 return json
-            
 
-            return [objects.data.response(i) for i in json]
-            
+            return [objects.data.Response(i) for i in json]
+
         else:
             return json
 
 
-    
     def __repr__(self):
-        """
-        docstring patch
-        """
-
-        return f"<testcanarybot.framework._api.core>"
+        return "<vkbotkit.framework._api.Core>"
 
 
-class uploader:
+class Uploader:
     """
     Инструменты для работы с медиафайлами
     """
 
-    __slots__ = ('__sdk')
+    __slots__ = ('__sdk', )
 
     def __init__(self, sdk):
-        """
-        docstring patch
-        """
-
         self.__sdk = sdk
 
 
@@ -297,19 +266,27 @@ class uploader:
         """
 
         response = await self.__sdk.api.photos.getMessagesUploadServer(peer_id = 0)
-        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photos))
+        response = await self.__sdk.api._http.post(
+            response.upload_url,
+            data = self.convert_asset(photos)
+            )
         response = await response.json(content_type = None)
 
         return await self.__sdk.api.photos.saveMessagesPhoto(**response)
 
-        
+
     async def photo_group_widget(self, photo, image_type):
         """
         docstring patch
         """
 
-        response = await self.__sdk.api.appWidgets.getGroupImageUploadServer(image_type = image_type)
-        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photo))
+        response = await self.__sdk.api.appWidgets.getGroupImageUploadServer(
+            image_type = image_type
+            )
+        response = await self.__sdk.api._http.post(
+            response.upload_url,
+            data = self.convert_asset(photo)
+            )
         response = await response.json(content_type = None)
 
         return await self.__sdk.api.appWidgets.saveGroupImage(**response)
@@ -320,7 +297,7 @@ class uploader:
         Обновить фотографию беседы
         """
 
-        if peer_id < 2000000000: 
+        if peer_id < 2000000000:
             raise ValueError("Incorrect peer_id")
 
         values = {
@@ -328,13 +305,17 @@ class uploader:
         }
 
         response = await self.__sdk.api.photos.getChatUploadServer(**values)
-        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(photo))
+        response = await self.__sdk.api._http.post(
+            response.upload_url,
+            data = self.convert_asset(photo))
         response = await response.json(content_type = None)
 
         return await self.__sdk.api.messages.setChatPhoto(file = response['response'])
 
 
-    async def document(self, document, title=None, tags=None, peer_id=None, doc_type = 'doc', to_wall = None):
+    async def document(
+        self, document, title=None, tags=None,
+        peer_id=None, doc_type = 'doc'):
         """
         Отправить файл (документ)
         """
@@ -343,15 +324,21 @@ class uploader:
             'peer_id': peer_id,
             'type': doc_type
         }
-        
-        response = await self.__sdk.api.docs.getMessagesUploadServer(**values) # vk.com/dev/docs.getMessagesUploadServer
-        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(document, sign = 'file'))
+
+        response = await self.__sdk.api.docs.getMessagesUploadServer(**values)
+        # vk.com/dev/docs.getMessagesUploadServer
+        response = await self.__sdk.api._http.post(
+            response.upload_url,
+            data = self.convert_asset(document, sign = 'file')
+            )
         response = await response.json(content_type = None)
 
-        if title: response['title'] = title 
-        if tags: response['tags'] = tags
+        if title:
+            response['title'] = title
+        if tags:
+            response['tags'] = tags
 
-        return await self.__sdk.api.docs.save(**response) 
+        return await self.__sdk.api.docs.save(**response)
 
 
     async def audio_message(self, audio, peer_id=None):
@@ -394,18 +381,23 @@ class uploader:
         values = dict()
 
         values['add_to_news'] = True
-        if reply_to_story: values['reply_to_story'] = reply_to_story
-        if link_text: values['link_text'] = link_text
-        if link_url: values['link_url'] = link_url
+        if reply_to_story:
+            values['reply_to_story'] = reply_to_story
+        if link_text:
+            values['link_text'] = link_text
+        if link_url:
+            values['link_url'] = link_url
 
         response = await method(**values)
-        response = await self.__sdk.api._http.post(response.upload_url, data = self.convertAsset(file, 'file' if file_type == "photo" else 'video_file'))
+        response = await self.__sdk.api._http.post(
+            response.upload_url,
+            data = self.convert_asset(file, 'file' if file_type == "photo" else 'video_file'))
         response = await response.json(content_type = None)
 
         return await self.__sdk.api.stories.save(upload_results = response.response.upload_result)
 
 
-    def convertAsset(self, files, sign = 'file'):
+    def convert_asset(self, files, sign = 'file'):
         """
         Вспомогательная функция для работы с файлами из папки assets
         """
@@ -413,9 +405,9 @@ class uploader:
         if isinstance(files, (str, bytes)) or issubclass(type(files), IOBase):
             response = None
 
-            if isinstance(files, str): 
+            if isinstance(files, str):
                 response = self.__sdk.assets(files, 'rb', buffering = 0)
-            elif isinstance(files, bytes): 
+            elif isinstance(files, bytes):
                 response = self.__sdk.assets(files)
             else:
                 response = files
@@ -431,9 +423,9 @@ class uploader:
                 if isinstance(files[i], (str, bytes)) or issubclass(type(files[i]), IOBase):
                     response = None
 
-                    if isinstance(files[i], str): 
+                    if isinstance(files[i], str):
                         response = self.__sdk.assets(files[i], 'rb', buffering = 0)
-                    elif isinstance(files[i], bytes): 
+                    elif isinstance(files[i], bytes):
                         response = BytesIO(files[i])
                     else:
                         response = files[i]
@@ -450,4 +442,4 @@ class uploader:
 
 
     def __repr__(self):
-        return f"<vkbotkit.framework._api.uploader>"
+        return "<vkbotkit.framework._api.uploader>"

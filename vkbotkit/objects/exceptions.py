@@ -3,29 +3,43 @@ Copyright 2022 kensoi
 """
 
 class MethodError(Exception):
-    pass
+    """
+    Exception
+    """
 
 
 class LibraryError(Exception):
-    pass
+    """
+    Exception
+    """
 
 
 class LibraryException(LibraryError):
-    pass
+    """
+    Exception
+    """
 
 
 class LibraryRewriteError(LibraryError):
-    pass
+    """
+    Exception
+    """
 
 
 class LibraryReload(LibraryException):
-    pass
+    """
+    Exception
+    """
 
 
 class CallVoid(LibraryException):
-    # raise exceptions.CallVoid(objects.task(package))
-    pass
+    """
+    Exception
+    raise exceptions.CallVoid(objects.task(package))
+    """
 
 
 class Quit(LibraryException):
-    pass
+    """
+    Exception
+    """

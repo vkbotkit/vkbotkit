@@ -1,10 +1,10 @@
-from .enums import keyboardcolor, keyboardbutton
-import json
-import six
-
 """
 Copyright 2022 kensoi
 """
+import json
+import six
+from .enums import KeyboardColor, KeyboardButton
+
 
 MAX_BUTTONS_ON_LINE = 5
 MAX_DEFAULT_LINES = 10
@@ -12,13 +12,19 @@ MAX_INLINE_LINES = 6
 
 
 def sjson_dumps(*args, **kwargs):
+    """
+    Dump to JSON
+    """
     kwargs['ensure_ascii'] = False
     kwargs['separators'] = (',', ':')
 
     return json.dumps(*args, **kwargs)
 
 
-class keyboard:
+class Keyboard:
+    """
+    Объект клавиатуры
+    """
     __slots__ = ('one_time', 'lines', 'keyboard', 'inline')
 
     def __init__(self, one_time=False, inline=False):
@@ -33,15 +39,24 @@ class keyboard:
         }
 
     def get_keyboard(self):
+        """
+        Convert into JSON
+        """
         return sjson_dumps(self.keyboard)
 
     @classmethod
     def get_empty_keyboard(cls):
+        """
+        Получить пустую клавиатуру
+        """
         keyboard = cls()
         keyboard.keyboard['buttons'] = []
         return keyboard.get_keyboard()
 
-    def add_button(self, label, color=keyboardcolor.SECONDARY, payload=None):
+    def add_button(self, label, color=KeyboardColor.SECONDARY, payload=None):
+        """
+        Добавить кнопку в клавиатуру
+        """
         current_line = self.lines[-1]
 
         if len(current_line) >= MAX_BUTTONS_ON_LINE:
@@ -49,13 +64,13 @@ class keyboard:
 
         color_value = color
 
-        if isinstance(color, keyboardcolor):
+        if isinstance(color, KeyboardColor):
             color_value = color_value.value
 
         if payload is not None and not isinstance(payload, six.string_types):
             payload = sjson_dumps(payload)
 
-        button_type = keyboardbutton.TEXT.value
+        button_type = KeyboardButton.TEXT.value
 
         current_line.append({
             'color': color_value,
@@ -66,7 +81,10 @@ class keyboard:
             }
         })
 
-    def add_callback_button(self, label, color=keyboardcolor.SECONDARY, payload=None):
+    def add_callback_button(self, label, color=KeyboardColor.SECONDARY, payload=None):
+        """
+        Добавить payload кнопку
+        """
         current_line = self.lines[-1]
 
         if len(current_line) >= MAX_BUTTONS_ON_LINE:
@@ -74,13 +92,13 @@ class keyboard:
 
         color_value = color
 
-        if isinstance(color, keyboardcolor):
+        if isinstance(color, KeyboardColor):
             color_value = color_value.value
 
         if payload is not None and not isinstance(payload, six.string_types):
             payload = sjson_dumps(payload)
 
-        button_type = keyboardbutton.CALLBACK.value
+        button_type = KeyboardButton.CALLBACK.value
 
         current_line.append({
             'color': color_value,
@@ -92,6 +110,9 @@ class keyboard:
         })
 
     def add_location_button(self, payload=None):
+        """
+        Добавить кнопку для получения геопозиции
+        """
         current_line = self.lines[-1]
 
         if len(current_line) != 0:
@@ -102,7 +123,7 @@ class keyboard:
         if payload is not None and not isinstance(payload, six.string_types):
             payload = sjson_dumps(payload)
 
-        button_type = keyboardbutton.LOCATION.value
+        button_type = KeyboardButton.LOCATION.value
 
         current_line.append({
             'action': {
@@ -111,7 +132,10 @@ class keyboard:
             }
         })
 
-    def add_vkpay_button(self, hash, payload=None):
+    def add_vkpay_button(self, hash_string, payload=None):
+        """
+        Добавить кнопку VKPay
+        """
         current_line = self.lines[-1]
 
         if len(current_line) != 0:
@@ -122,17 +146,20 @@ class keyboard:
         if payload is not None and not isinstance(payload, six.string_types):
             payload = sjson_dumps(payload)
 
-        button_type = keyboardbutton.VKPAY.value
+        button_type = KeyboardButton.VKPAY.value
 
         current_line.append({
             'action': {
                 'type': button_type,
                 'payload': payload,
-                'hash': hash
+                'hash': hash_string
             }
         })
 
-    def add_vkapps_button(self, app_id, owner_id, label, hash, payload=None):
+    def add_vkapps_button(self, app_id, owner_id, label, hash_string, payload=None):
+        """
+        Добавить кнопку для перехода в мини приложение
+        """
         current_line = self.lines[-1]
 
         if len(current_line) != 0:
@@ -143,7 +170,7 @@ class keyboard:
         if payload is not None and not isinstance(payload, six.string_types):
             payload = sjson_dumps(payload)
 
-        button_type = keyboardbutton.VKAPPS.value
+        button_type = KeyboardButton.VKAPPS.value
 
         current_line.append({
             'action': {
@@ -152,11 +179,14 @@ class keyboard:
                 'owner_id': owner_id,
                 'label': label,
                 'payload': payload,
-                'hash': hash
+                'hash': hash_string
             }
         })
 
     def add_openlink_button(self, label, link, payload=None):
+        """
+        Добавить кнопку-ссылку
+        """
         current_line = self.lines[-1]
 
         if len(current_line) >= MAX_BUTTONS_ON_LINE:
@@ -165,7 +195,7 @@ class keyboard:
         if payload is not None and not isinstance(payload, six.string_types):
             payload = sjson_dumps(payload)
 
-        button_type = keyboardbutton.OPENLINK.value
+        button_type = KeyboardButton.OPENLINK.value
 
         current_line.append({
             'action': {
@@ -177,6 +207,9 @@ class keyboard:
         })
 
     def add_line(self):
+        """
+        Перевод на новую строку
+        """
         if self.inline:
             if len(self.lines) >= MAX_INLINE_LINES:
                 raise ValueError(f'Max {MAX_INLINE_LINES} lines for inline keyboard')

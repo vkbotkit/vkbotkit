@@ -1,22 +1,22 @@
-import asyncio
-
 """
 Copyright 2022 kensoi
 """
 
-class handler():
+import asyncio
+
+class Handler():
     """
     docstring patch
     """
 
-    def __init__(self, filter, libraryCallback, library_module):
+    def __init__(self, callback_function, library_callback, library_module):
         """
         docstring patch
         """
 
-        self.filter = filter
-        self.libraryModule = library_module
-        self.libraryCallback = libraryCallback
+        self.callback_function = callback_function
+        self.library_module = library_module
+        self.library_callback = library_callback
 
 
     def __repr__(self):
@@ -24,7 +24,7 @@ class handler():
         docstring patch
         """
 
-        return f"<vkbotkit.objects.decorators.handler({self.name})>"
+        return "<vkbotkit.objects.decorators.Handler>"
 
 
     def run(self):
@@ -43,24 +43,24 @@ class handler():
         """
 
         return asyncio.get_event_loop()
-    
+
 
     async def create_task(self, package):
         """
         docstring patch
         """
 
-        if await self.filter.check(package):
-            return await self.libraryCallback(self.libraryModule, package)
+        if await self.callback_function.check(package):
+            return await self.library_callback(self.library_module, package)
 
-def callback(filter):
+def callback(callback_filter):
     """
     docstring patch
     """
 
-    def decorator(callback):
+    def decorator(function):
         def wrap(self):
-            return handler(filter, callback, self)
+            return Handler(callback_filter, function, self)
 
         return wrap
 

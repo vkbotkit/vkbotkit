@@ -1,10 +1,57 @@
-import typing
-
 """
 Copyright 2022 kensoi
 """
 
-class expression:
+class Response:
+    """
+    docstring patch
+    """
+
+    def __init__(self, entries):
+        """
+        docstring patch
+        """
+
+        self.__dict__.update(entries)
+
+        for i in self.__dict__:
+            setattr(self, i, self.__convert(getattr(self, i)))
+
+        self.raw = entries
+
+
+    def __convert(self, attr):
+        """
+        docstring patch
+        """
+
+        attr_type = type(attr)
+
+        if attr_type == dict:
+            return Key(attr)
+
+        elif attr_type == list:
+            return [self.__convert(i) for i in attr]
+
+        else:
+            return attr
+
+
+    def __repr__(self):
+        """
+        docstring patch
+        """
+
+        return f'<{type(self)}({self.raw})>'
+
+
+class Key(Response):
+    """
+    docstring patch
+    """
+
+
+class Expression:
     """
     docstring patch
     """
@@ -26,7 +73,7 @@ class expression:
         docstring patch
         """
 
-        return self.value
+        return str(self.value)
 
 
     def __int__(self):
@@ -35,7 +82,7 @@ class expression:
         """
 
         return self.value
-    
+
 
     def __list__(self):
         """
@@ -50,23 +97,42 @@ class expression:
         docstring patch
         """
 
-        return '<vkbotkit.objects.data.expression(:::{}:{}:::)>'.format(self.value, self.value)
+        return f'<vkbotkit.objects.data.Expression(:::{self.value}:{self.value}:::)>'
 
 
-def task(package):
+class Package(Response):
+    """
+    Объект обработанного уведомления
+    """
+
+    # __item = "$item"
+    # __items = "$items"
+    # __mention = "$mention"
+    # __mentions = "$mentions"
+    # __expr = "$expr"
+    # __exprs = "$exprs"
+
+    id = 0
+    date = 0
+    random_id = 0
+    peer_id = 1
+    from_id = 1
+    items = []
+
+def task(message: Package):
     """
     Объект задачи для системы ожидания ответов
     """
 
-    return "$" + str(package.peer_id)+ "_" + str(package.from_id)
+    return "$" + str(message.peer_id)+ "_" + str(message.from_id)
 
 
-class mention:
+class Mention:
     """
     docstring patch
     """
 
-    __slots__ = ('id', 'call') 
+    __slots__ = ('value', 'key')
 
 
     def __init__(self, text):
@@ -78,16 +144,16 @@ class mention:
             raise Exception(f"can't init mention from this text: \"{text}\" ")
 
         text = text[1:-1]
-        OBJ, self.call = text.split("|")
+        obj, self.key = text.split("|")
 
-        if OBJ.startswith('id'):
-            self.id = int(OBJ[2:])
+        if obj.startswith('id'):
+            self.value = int(obj[2:])
 
-        elif OBJ.startswith('club'):
-            self.id = -int(OBJ[4:])
+        elif obj.startswith('club'):
+            self.value = -int(obj[4:])
 
         else:
-            self.id = -int(OBJ[6:])
+            self.value = -int(obj[6:])
 
 
     def __int__(self):
@@ -95,7 +161,7 @@ class mention:
         docstring patch
         """
 
-        return self.id 
+        return self.value
 
 
     def __str__(self):
@@ -103,7 +169,7 @@ class mention:
         docstring patch
         """
 
-        return self.call
+        return self.key
 
 
     def __repr__(self):
@@ -111,79 +177,8 @@ class mention:
         docstring patch
         """
 
-        if self.id > 0:
-            return f"[id{self.id}|{self.call}]"
+        if self.value > 0:
+            return f"[id{self.value}|{self.key}]"
+
         else:
-            return f"[club{-self.id}|{self.call}]"
-
-
-class response:
-    """
-    docstring patch
-    """
-
-    def __init__(self, entries):
-        """
-        docstring patch
-        """
-
-        self.__dict__.update(entries)
-
-        for i in self.__dict__.keys():
-            setattr(self, i, self.__convert(getattr(self, i)))
-
-        self.raw = entries
-            
-
-    def __convert(self, attr):
-        """
-        docstring patch
-        """
-
-        attr_type = type(attr)
-
-        if attr_type == dict:
-            return key(attr)
-
-        elif attr_type == list:
-            return [self.__convert(i) for i in attr]
-        
-        else:
-            return attr  
-
-
-    def __repr__(self):
-        """
-        docstring patch
-        """
-
-        return '<{}({})>'.format(type(self), self.raw)
-  
-
-
-class key(response):
-    """
-    docstring patch
-    """
-
-    pass
-
-
-class package(response):
-    """
-    Объект обработанного уведомления
-    """
-
-    __item = "$item"
-    __items = "$items"
-    __mention = "$mention"
-    __mentions = "$mentions"
-    __expr = "$expr"
-    __exprs = "$exprs"
-
-    id = 0
-    date = 0
-    random_id = 0
-    peer_id = 1
-    from_id = 1
-    items = []
+            return f"[club{-self.value}|{self.key}]"

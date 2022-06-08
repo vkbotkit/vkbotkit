@@ -117,7 +117,7 @@ dmypy.json
 assets/
 library/
 libragram/
-testcanarybot/
+vkbotkit/
 bot.py
 config.py
 split_util.py

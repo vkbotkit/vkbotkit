@@ -1,16 +1,16 @@
-from . import _features, _api
-from .. import objects
-from ..objects.data import response
+"""
+Copyright 2022 kensoi
+"""
 import asyncio
 import os
 import random
 import typing
+from . import _features, _api
+from .. import objects
+from ..objects.data import Response
 
-"""
-Copyright 2022 kensoi
-"""
 
-class toolkit:
+class Toolkit:
     """
     Инструментарий
     """
@@ -21,10 +21,10 @@ class toolkit:
         """
 
         self.__logger = None
-        self.assets = _features._assets(self, assets_path)
-        self.core = _api.core(token)
-        self.replies = _features.replies()
-        self.uploader = _api.uploader(self)
+        self.assets = _features.Assets(self, assets_path)
+        self.core = _api.Core(token)
+        self.replies = _features.Replies()
+        self.uploader = _api.Uploader(self)
 
     @property
     def __event_loop(self):
@@ -36,15 +36,17 @@ class toolkit:
 
 
     @property
-    def api(self) -> _api.api:
+    def api(self) -> _api.API:
         """
         docstring patch
         """
 
         return self.core._api
-        
 
-    async def start_polling(self, library:typing.Optional[_features.callbacklib] = None) -> None: # only for group bots
+
+    async def start_polling(
+        self, library:typing.Optional[_features.CallbackLib] = None
+        ) -> None: # only for group bots
         """
         Начать обработку уведомлений
         """
@@ -58,9 +60,9 @@ class toolkit:
 
         self.core._longpoll._is_polling = True
         group_info = await self.api.groups.getById()
-        await self.core._longpoll._longpoll__update_longpoll_server(group_info[0].id)
+        await self.core._longpoll._Longpoll__update_longpoll_server(group_info[0].id)
         
-        self.log("[%s] polling is started" % group_info[0].screen_name)
+        self.log(f"[{group_info[0].screen_name}] polling is started")
 
         while self.core._longpoll._is_polling:
             for event in await self.core._longpoll._check(group_info[0].id):
@@ -68,7 +70,7 @@ class toolkit:
 
     def is_polling(self) -> bool:
         """
-        docstring patch
+        Работает ли в данный момент поллинг.
         """
 
         return self.core._longpoll._is_polling
@@ -84,18 +86,25 @@ class toolkit:
             self.log("polling finished", objects.enums.log_level.DEBUG)
 
         else:
-            self.log("attempt to stop poll cycle that is not working now", objects.enums.log_level.WARNING)
+            self.log(
+                "attempt to stop poll cycle that is not working now",
+                objects.enums.LogLevel.WARNING)
 
 
-    def configure_logger(self, log_level: objects.enums.log_level = objects.enums.log_level.INFO, file_log = False, print_log = False):
+    def configure_logger(
+        self, log_level: objects.enums.LogLevel = objects.enums.LogLevel.INFO,
+        file_log = False, print_log = False
+        ):
         """
         Настроить логгер
         """
 
-        self.__logger = _features._logger("vkbotkit", log_level, file_log, print_log)
+        self.__logger = _features.Logger("vkbotkit", log_level, file_log, print_log)
 
 
-    def log(self, message, log_level: objects.enums.log_level = objects.enums.log_level.INFO) -> None:
+    def log(
+        self, message,
+        log_level: objects.enums.LogLevel = objects.enums.LogLevel.INFO) -> None:
         """
         Записать сообщение в логгер
         """
@@ -103,7 +112,7 @@ class toolkit:
         if self.__logger:
             self.__logger.logger.log(level = log_level.value, msg = message)
 
-    
+
     def gen_random(self) -> int:
         """
         Сгенерировать случайное число (для messages.send метода)
@@ -112,16 +121,16 @@ class toolkit:
         return int(random.random() * 999999)
 
 
-    def create_keyboard(self, one_time:bool=False, inline:bool=False) -> objects.keyboard.keyboard:
+    def create_keyboard(self, one_time:bool=False, inline:bool=False) -> objects.keyboard.Keyboard:
         """
         Создать клавиатуру
         """
 
-        return objects.keyboard.keyboard(one_time, inline)
+        return objects.keyboard.Keyboard(one_time, inline)
 
 
 
-    async def get_me(self, fields=None) -> objects.data.response:
+    async def get_me(self, fields=None) -> Response:
         """
         Получить информацию о сообществе, в котором работает ваш бот
         """
@@ -138,8 +147,8 @@ class toolkit:
 
             if len(page_info) > 0:
                 bot_type = "club"
-        
-        return objects.data.response({
+
+        return Response({
             **page_info[0], "bot_type": bot_type
         })
 
@@ -150,39 +159,43 @@ class toolkit:
         """
 
         res = await self.get_me()
-        return "[%s%i|%s]" % (res.bot_type, res.id, res.screen_name)
+        return f"[{res.bot_type + str(res.id)}|{res.screen_name}]"
 
 
-    async def send_reply(self, package: objects.data.package, message: typing.Optional[str]=None, delete_last:bool = False, **kwargs):
+    async def send_reply(
+        self, package: objects.data.Package, message: typing.Optional[str]=None,
+        delete_last:bool = False, **kwargs):
         """
         Упрощённая форма отправки ответа
         """
 
-        if not 'peer_id' in kwargs: 
+        if  'peer_id' not in kwargs:
             kwargs['peer_id'] = package.peer_id
 
-        if not 'random_id' in kwargs:
+        if  'random_id' not in kwargs:
             kwargs['random_id'] = self.gen_random()
 
-        if not 'message' in kwargs and message: 
+        if  'message' not in kwargs and message:
             kwargs['message'] = message
 
         if delete_last:
             await self.delete_message(package)
-            
+
         return await self.api.messages.send(**kwargs)
-    
+
 
     async def delete_message(self, package):
         """
         Удалить сообщение
         """
 
-        return await self.api.messages.delete(conversation_message_ids = package.conversation_message_id, peer_id = package.peer_id, delete_for_all = 1)
+        return await self.api.messages.delete(
+            conversation_message_ids = package.conversation_message_id,
+            peer_id = package.peer_id, delete_for_all = 1)
 
 
 
-class librabot:
+class Librabot:
     """
     Объект бота
     """
@@ -193,13 +206,13 @@ class librabot:
         """
 
         if not assetpath:
-            assetpath = os.getcwd() + objects.path_separator + "assets"
+            assetpath = os.getcwd() + objects.PATH_SEPARATOR + "assets"
 
         if not libpath:
-            libpath = os.getcwd() + objects.path_separator + "library"
-        
-        self.library = _features.callbacklib(libpath)
-        self.toolkit = toolkit(token, assetpath)
+            libpath = os.getcwd() + objects.PATH_SEPARATOR + "library"
+
+        self.toolkit = Toolkit(token, assetpath)
+        self.library = _features.CallbackLib(self.toolkit, libpath)
 
 
     async def start_polling(self) -> None:

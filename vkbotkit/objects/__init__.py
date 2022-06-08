@@ -2,14 +2,14 @@
 Copyright 2022 kensoi
 """
 
+import os
 from . import (
     data, decorators, enums, exceptions, keyboard
 )
-import os
 
-path_separator = "\\" if os.name == 'nt' else "/"
+PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
 
-class library_module:
+class LibraryModule:
     """
     Объект плагина
     """
@@ -29,5 +29,5 @@ class library_module:
             method = getattr(self, i)
             if callable(method):
                 obj = method()
-                if isinstance(obj, decorators.handler):
+                if isinstance(obj, decorators.Handler):
                     self._handlers.append(obj)

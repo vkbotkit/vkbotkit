@@ -1,11 +1,11 @@
-from .framework._app import librabot, toolkit
-from .framework._api import core
-
 """
 Copyright 2022 kensoi
 """
+from .framework._app import Librabot, Toolkit
+from .framework._api import Core
 
-__version__ = "1.0a8"
+
+__version__ = "1.0a9"
 __title__ = "vkbotkit"
 __author__ = 'kensoi'
 __license__ = 'Apache v2'
@@ -14,4 +14,4 @@ __doc__ = "kensoi/vkbotkit, " + __version__ + """
 Documentation is available at kensoi.github.io/vkbotkit
 """
 
-__all__ = ['librabot', 'core', 'toolkit']
+__all__ = ['Librabot', 'Core', 'Toolkit']

@@ -1,18 +1,20 @@
-import sys
-
 """
 Copyright 2022 kensoi
 """
+import sys
 
-packaet_screen_name = "packaet"
-packaet_message_cover = "[{screen_name}] {message}"
 
-def message(message):
+PACKAET_SCREEN_NAME = "packaet"
+PACKAET_MESSAGE_COVER = "[{screen_name}] {message}"
+
+def message(message_to_print):
     """
-    docstring patch
+    Packaet Logger
     """
 
-    print(packaet_message_cover.format(screen_name = packaet_screen_name, message = message))
+    print(PACKAET_MESSAGE_COVER.format(
+        screen_name = PACKAET_SCREEN_NAME,
+        message = message_to_print))
 
 if __name__ == "__main__":
     args = sys.argv[1:]
