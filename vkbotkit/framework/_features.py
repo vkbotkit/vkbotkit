@@ -188,7 +188,7 @@ class CallbackLib:
         """
 
         self.handlers.extend(lib()._handlers)
-        self.handlers.sort(key = lambda h: h.filter.priority)
+        self.handlers.sort(key = lambda h: h.callback_function.priority)
 
 
     async def parse(self, toolkit, package):
@@ -211,10 +211,9 @@ class CallbackLib:
         """
         Обработать уведомление по типу
         """
-
-        if hasattr(enums.Events, event['type']):
-            event_type = getattr(enums.Events, event['type'])
-
+        event_type = event['type'].upper()
+        if hasattr(enums.Events, event_type):
+            event_type = getattr(enums.Events, event_type)
         else:
             raise Exception("Unsupported event")
 

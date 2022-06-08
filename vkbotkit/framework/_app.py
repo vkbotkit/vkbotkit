@@ -5,6 +5,8 @@ import asyncio
 import os
 import random
 import typing
+
+from vkbotkit.objects import exceptions
 from . import _features, _api
 from .. import objects
 from ..objects.data import Response
@@ -61,7 +63,7 @@ class Toolkit:
         self.core._longpoll._is_polling = True
         group_info = await self.api.groups.getById()
         await self.core._longpoll._Longpoll__update_longpoll_server(group_info[0].id)
-        
+
         self.log(f"[{group_info[0].screen_name}] polling is started")
 
         while self.core._longpoll._is_polling:
@@ -224,6 +226,22 @@ class Toolkit:
 
         return members
 
+    async def is_admin(self, peer_id: int, user_id: typing.Optional[int] = None):
+        """
+        Проверяет наличие прав у пользователя
+        Если user_id пустой -- проверяется наличие прав у бота
+        """
+        if user_id:
+            admin_list = await self.get_chat_admins(peer_id)
+            return user_id in admin_list
+            
+        else:
+            try:
+                admin_list = await self.get_chat_admins(peer_id)
+                return True
+
+            except exceptions.MethodError:
+                return False
 
 
 class Librabot:

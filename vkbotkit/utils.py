@@ -5,7 +5,7 @@ import os
 import re
 import typing
 from .objects import PATH_SEPARATOR
-from .objects.data import Mention
+from .objects.data import dump_mention
 
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
@@ -52,7 +52,7 @@ def convert_command(text:str) -> list:
 
     for i in filter(lambda item: item != "", re.split(r'(\[.*\])', text)):
         if i[0] == "[" and i[-1] == "]":
-            items.append(Mention(i))
+            items.append(dump_mention(i))
 
         else:
             items.extend(smart_split(i))
