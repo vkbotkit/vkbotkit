@@ -226,8 +226,7 @@ class Core:
 
         if isinstance(json, dict):
             if "error" in json:
-                print(json)
-                raise Exception("response error")
+                raise objects.exceptions.MethodError("response error")
 
             elif is_raw:
                 return json

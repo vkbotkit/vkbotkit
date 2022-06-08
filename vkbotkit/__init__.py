@@ -5,7 +5,7 @@ from .framework._app import Librabot, Toolkit
 from .framework._api import Core
 
 
-__version__ = "1.0a9"
+__version__ = "1.0a10"
 __title__ = "vkbotkit"
 __author__ = 'kensoi'
 __license__ = 'Apache v2'

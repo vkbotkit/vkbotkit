@@ -132,28 +132,43 @@ class Mention:
     docstring patch
     """
 
-    __slots__ = ('value', 'key')
+    __slots__ = ('value', 'key', 'repr')
 
 
-    def __init__(self, text):
+    def __init__(self, page_id):
         """
         docstring patch
         """
+        if isinstance(page_id, int):
+            self.value = page_id
+            if page_id > 0:
+                self.key = f"@id{page_id}"
+                self.repr = f"[id{page_id}|{self.key}]"
+            else:
+                self.key = f"@public{abs(page_id)}"
+                self.repr = f"[public{page_id}|{self.key}]"
 
-        if text[0] != "[" or text[-1] != "]":
-            raise Exception(f"can't init mention from this text: \"{text}\" ")
+        elif isinstance(page_id, str):
+            if page_id[0] != "[" or page_id[-1] != "]":
+                raise Exception(f"can't init mention from this text: \"{text}\" ")
 
-        text = text[1:-1]
-        obj, self.key = text.split("|")
+            self.repr = page_id
+            text = self.repr[1:-1]
+            obj, self.key = text.split("|")
 
-        if obj.startswith('id'):
-            self.value = int(obj[2:])
+            if obj.startswith('id'):
+                self.value = int(obj[2:])
 
-        elif obj.startswith('club'):
-            self.value = -int(obj[4:])
+            elif obj.startswith('club'):
+                self.value = -int(obj[4:])
+
+            elif obj.startswith('public'):
+                self.value = -int(obj[6:])
+                
+            raise TypeError("Invalid page id (should be club, public or id)")
 
         else:
-            self.value = -int(obj[6:])
+            raise TypeError("Can't recognise type of page id (should be int or str)")
 
 
     def __int__(self):

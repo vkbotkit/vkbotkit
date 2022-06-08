@@ -129,7 +129,6 @@ class Toolkit:
         return objects.keyboard.Keyboard(one_time, inline)
 
 
-
     async def get_me(self, fields=None) -> Response:
         """
         Получить информацию о сообществе, в котором работает ваш бот
@@ -153,17 +152,18 @@ class Toolkit:
         })
 
 
-    async def get_my_mention(self) -> str:
+    async def get_my_mention(self) -> objects.data.Mention:
         """
         Получить форму упоминания сообщества, в котором работает ваш бот
         """
 
         res = await self.get_me()
-        return f"[{res.bot_type + str(res.id)}|{res.screen_name}]"
+        return objects.data.Mention(f"[{res.bot_type + str(res.id)}|{res.screen_name}]")
 
 
     async def send_reply(
         self, package: objects.data.Package, message: typing.Optional[str]=None,
+        attachment: typing.Optional[str]=None,
         delete_last:bool = False, **kwargs):
         """
         Упрощённая форма отправки ответа
@@ -177,6 +177,9 @@ class Toolkit:
 
         if  'message' not in kwargs and message:
             kwargs['message'] = message
+
+        if  'attachment' not in kwargs and attachment:
+            kwargs['attachment'] = attachment
 
         if delete_last:
             await self.delete_message(package)
@@ -192,6 +195,34 @@ class Toolkit:
         return await self.api.messages.delete(
             conversation_message_ids = package.conversation_message_id,
             peer_id = package.peer_id, delete_for_all = 1)
+
+    async def get_chat_members(self, peer_id):
+        """
+        Получить список участников в беседе
+        """
+
+        chat_list = await self.api.messages.getConversationMembers(
+            peer_id = peer_id)
+
+        members = list(map(lambda x: x.member_id, chat_list.items))
+
+        return members
+
+    async def get_chat_admins(self, peer_id):
+        """
+        Получить список администраторов в беседе
+        """
+
+        chat_list = await self.api.messages.getConversationMembers(
+            peer_id = peer_id)
+
+        members = map(
+                    lambda x: x.member_id if hasattr(x, "is_admin") else None,
+                    chat_list.items
+                    )
+        members = list(filter(lambda x: x is not None, members))
+
+        return members
 
 
 
