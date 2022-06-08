@@ -134,7 +134,7 @@ class IsForYou(Filter):
         Filter.__init__(self)
         mapped_mentions = map(lambda x: str(x).lower(), mentions)
         self.mentions = set(mapped_mentions)
-        self.update_type = WhichUpdate({enums.events.message_new})
+        self.update_type = WhichUpdate({enums.Events.MESSAGE_NEW})
         self.priority = 5
         self.bot_id = None
         self.group_id = None
@@ -147,12 +147,12 @@ class IsForYou(Filter):
                 if isinstance(mention, str) and mention.lower() in self.mentions:
                     return True
 
-                elif isinstance(mention, data.mention):
+                elif isinstance(mention, data.Mention):
                     if not self.group_id:
                         res = await package.toolkit.get_me()
                         self.bot_id = abs(res.id)
 
-                    return self.bot_id == mention.id
+                    return self.bot_id == mention.value
 
 class IsCommand(Filter):
     """
@@ -162,7 +162,7 @@ class IsCommand(Filter):
         Filter.__init__(self)
         mapped_commands = map(lambda x: str(x).lower(), commands)
         self.commands = set(mapped_commands)
-        self.update_type = WhichUpdate({enums.events.message_new})
+        self.update_type = WhichUpdate({enums.Events.MESSAGE_NEW})
         self.priority = 5
 
 
@@ -177,7 +177,7 @@ class HasPayload(Filter):
     """
     def __init__(self):
         Filter.__init__(self)
-        self.update_type = WhichUpdate({enums.events.message_new})
+        self.update_type = WhichUpdate({enums.Events.MESSAGE_NEW})
 
 
     async def check(self, package) -> typing.Optional[bool]:

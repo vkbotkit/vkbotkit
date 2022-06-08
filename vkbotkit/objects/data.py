@@ -135,40 +135,17 @@ class Mention:
     __slots__ = ('value', 'key', 'repr')
 
 
-    def __init__(self, page_id):
+    def __init__(self, page_id = None, page_key = None):
         """
         docstring patch
         """
-        if isinstance(page_id, int):
-            self.value = page_id
-            if page_id > 0:
-                self.key = f"@id{page_id}"
-                self.repr = f"[id{page_id}|{self.key}]"
-            else:
-                self.key = f"@public{abs(page_id)}"
-                self.repr = f"[public{page_id}|{self.key}]"
-
-        elif isinstance(page_id, str):
-            if page_id[0] != "[" or page_id[-1] != "]":
-                raise Exception(f"can't init mention from this text: \"{text}\" ")
-
-            self.repr = page_id
-            text = self.repr[1:-1]
-            obj, self.key = text.split("|")
-
-            if obj.startswith('id'):
-                self.value = int(obj[2:])
-
-            elif obj.startswith('club'):
-                self.value = -int(obj[4:])
-
-            elif obj.startswith('public'):
-                self.value = -int(obj[6:])
-                
-            raise TypeError("Invalid page id (should be club, public or id)")
-
+        self.value = page_id
+        if page_id > 0:
+            self.key = page_key if page_key else f"@id{page_id}"
+            self.repr = f"[id{page_id}|{self.key}]"
         else:
-            raise TypeError("Can't recognise type of page id (should be int or str)")
+            self.key = page_key if page_key else f"@public{abs(page_id)}"
+            self.repr = f"[public{abs(page_id)}|{self.key}]"
 
 
     def __int__(self):
@@ -188,12 +165,28 @@ class Mention:
 
 
     def __repr__(self):
-        """
-        docstring patch
-        """
+        return self.repr
 
-        if self.value > 0:
-            return f"[id{self.value}|{self.key}]"
+def dump_mention(text):
+    """
+    Конвертировать текст формата [id1|text] в объект Mention
+    """
+    if text[0] != "[" or text[-1] != "]":
+        raise Exception(f"can't init mention from this text: \"{text}\" ")
 
-        else:
-            return f"[club{-self.value}|{self.key}]"
+    text = text[1:-1]
+    obj, key = text.split("|")
+
+    if obj.startswith('id'):
+        value = int(obj[2:])
+        return Mention(value, key)
+
+    elif obj.startswith('club'):
+        value = int(obj[4:])
+        return Mention(value, key)
+
+    elif obj.startswith('public'):
+        value = int(obj[6:])
+        return Mention(value, key)
+        
+    raise TypeError("Invalid page id (should be club, public or id)")

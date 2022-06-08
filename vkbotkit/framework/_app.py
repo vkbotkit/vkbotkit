@@ -158,7 +158,7 @@ class Toolkit:
         """
 
         res = await self.get_me()
-        return objects.data.Mention(f"[{res.bot_type + str(res.id)}|{res.screen_name}]")
+        return objects.data.dump_mention(f"[{res.bot_type + str(res.id)}|{res.screen_name}]")
 
 
     async def send_reply(
