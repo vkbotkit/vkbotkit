@@ -6,7 +6,7 @@ from enum import Enum
 
 class Events(Enum):
     """
-    Longpoll events
+    Типы событий для Longpoll
     https://dev.vk.com/method/groups.getLongPollSettings
     """
 
@@ -72,9 +72,10 @@ class Events(Enum):
 
 class Action(Enum):
     """
-    Уровень логгирования
+    Типы событий в беседе
     https://dev.vk.com/api/user-long-poll/getting-started#Вложения%20и%20дополнительные%20данные
     """
+    
     CHAT_PHOTO_UPDATE = "chat_photo_update"
     CHAT_PHOTO_REMOVE = "chat_photo_remove"
     CHAT_CREATE = "chat_create"
@@ -90,6 +91,7 @@ class LogLevel(Enum):
     """
     Уровень логгирования
     """
+
     CRITICAL = 50
     ERROR = 40
     WARNING = 30
@@ -97,10 +99,12 @@ class LogLevel(Enum):
     DEBUG = 10
     NOTSET = 0
 
+
 class NameCases(Enum):
     """
-    Падежи слов
+    Падежи имён для ФИО пользователей
     """
+
     NOM = 'nom'
     GEN = 'gen'
     DAT = 'dat'
@@ -108,26 +112,13 @@ class NameCases(Enum):
     INS = 'ins'
     ABL = 'abl'
 
-class Values(Enum):
-    """
-    Рабочие имена
-    """
-    EMPTY = ''
-    LOG = 'log'
-    TUMBLER = 'tumbler'
-    WORKSPACE = 'workspace'
-
-    EXPR = 'expr'
-
-
-    HIDDEN = '$$$'
-
 
 class KeyboardColor(Enum):
     """
     Доступные цвета кнопок на клавиатуре
     https://dev.vk.com/api/bots/development/keyboard
     """
+
     PRIMARY = 'primary' # blue
     SECONDARY = 'secondary' # white
     NEGATIVE = 'negative' # red
@@ -139,6 +130,7 @@ class KeyboardButton(Enum):
     Доступные типы кнопок на клавиатуре
     https://dev.vk.com/api/bots/development/keyboard
     """
+
     TEXT = "text"
     LOCATION = "location"
     VKPAY = "vkpay"

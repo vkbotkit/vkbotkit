@@ -116,9 +116,3 @@ dmypy.json
 # dev stuff
 assets/
 library/
-libragram/
-vkbotkit/
-bot.py
-config.py
-split_util.py
-clear_wall.py

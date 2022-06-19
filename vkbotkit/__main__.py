@@ -21,3 +21,6 @@ if __name__ == "__main__":
 
     if args[0] == 'test':
         message('hello world!')
+
+    elif args[0] == "version":
+        message('version')

@@ -2,32 +2,22 @@
 Copyright 2022 kensoi
 """
 
-import os
-from . import (
-    data, decorators, enums, exceptions, keyboard
-)
+from . import data, enums, exceptions, filters, keyboard
+from ..framework.decorators import callback, Handler
+from ..framework.utils import Mention
 
-PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
+NAME_CASES = ['nom', 'gen','dat', 'acc', 'ins', 'abl']
 
 class LibraryModule:
     """
     Объект плагина
     """
+
     def __init__(self):
-        """
-        docstring patch
-        """
+        methods = set(dir(self)) - set(dir(object()))
 
-        attrs_a = dir(self)
-        attrs_b = dir(object())
-
-        set_a = set(attrs_a)
-        set_b = set(attrs_b)
-        self._handlers = []
-        methods = set_a - set_b
-        for i in methods:
-            method = getattr(self, i)
-            if callable(method):
-                obj = method()
-                if isinstance(obj, decorators.Handler):
-                    self._handlers.append(obj)
+        objs = map(lambda i: getattr(self, i), methods)
+        funcs = filter(callable, objs)
+        decs = map(lambda i: i(), funcs)
+        callbacks = filter(lambda i: isinstance(i, Handler), decs)
+        self.handlers = list(callbacks)

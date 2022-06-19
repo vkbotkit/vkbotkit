@@ -21,7 +21,7 @@ class Filter:
         """
 
         package.toolkit.log(
-            "Tried to use vkbotkit.objects.filters.Filter",
+            "Tried to use <vkbotkit.objects.filters.Filter>",
             log_level = enums.LogLevel.DEBUG
             )
         return True
