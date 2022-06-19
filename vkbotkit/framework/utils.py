@@ -7,7 +7,7 @@ import re
 import typing
 
 PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.0a13"
+VERSION = "1.0a14"
 
 class Mention:
     """
