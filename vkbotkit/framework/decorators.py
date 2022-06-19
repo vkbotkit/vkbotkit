@@ -42,19 +42,5 @@ class Handler():
         Создать задачу для обработчика
         """
         if await self.filter.check(package):
-            response = await self.callback(self.module, package)
-            return response
-
-def callback(callback_filter):
-    """
-    Прикрепить к обработчику фильтры
-    """
-
-    def decorator(function):
-        def wrap(self):
-            return Handler(callback_filter, function, self)
-
-        return wrap
-
-    return decorator
+            return await self.callback(self.module, package)
     

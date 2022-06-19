@@ -3,6 +3,7 @@ Copyright 2022 kensoi
 """
 
 import asyncio
+from msilib.schema import Error
 import os
 import logging
 import logging.config
@@ -13,8 +14,8 @@ from importlib.util import (
     module_from_spec)
 
 
-from .utils import filter_folders, convert_command
-from ..objects import data, enums, exceptions, PATH_SEPARATOR, LibraryModule
+from .utils import map_folders, convert_command, PATH_SEPARATOR
+from ..objects import data, enums, exceptions, LibraryModule
 
 
 class Assets:
@@ -98,13 +99,24 @@ class CallbackLib:
             raise exceptions.LibraryTypeError(
                 "plugin library folder should be a directory, not a file")
 
-        for module_path in filter_folders(self.__libdir):
-            spec = spec_from_file_location(
-                module_path[len(self.__libdir) + 1:].replace(".py", "", 1), module_path
-                )
-            loaded_module = module_from_spec(spec)
-            spec.loader.exec_module(loaded_module)
-            self.import_module(loaded_module.Main)
+        plugin_list = map_folders(self.__libdir)
+
+        for module_path in plugin_list:
+            try:
+                spec = spec_from_file_location(
+                    module_path[len(self.__libdir) + 1:].replace(".py", "", 1), module_path
+                    )
+                loaded_module = module_from_spec(spec)
+                spec.loader.exec_module(loaded_module)
+                self.import_module(loaded_module.Main)
+
+            except Exception as exc:
+                toolkit.log(f"Importing plugin {module_path} failed: {str(exc)}",
+                enums.LogLevel.DEBUG)
+
+            finally:
+                toolkit.log(f"Importing plugin {module_path} succeed", enums.LogLevel.DEBUG)
+
 
         self.handlers.sort(key = lambda h: h.filter.priority)
 
@@ -113,8 +125,7 @@ class CallbackLib:
         """
         Импортировать специфический модуль
         """
-
-        if isinstance(lib, LibraryModule):
+        if isinstance(lib(), LibraryModule):
             self.handlers.extend(lib().handlers)
 
 
@@ -130,6 +141,7 @@ class CallbackLib:
             package.toolkit = toolkit
 
         if not toolkit.replies.check(package):
+            print(self.handlers)
             await asyncio.gather(*map(lambda h: h.create_task(package), self.handlers))
 
 

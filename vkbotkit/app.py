@@ -82,7 +82,7 @@ class BotWrap:
 
         if isinstance(json, dict):
             if "error" in json:
-                raise exceptions.MethodError("response error")
+                raise exceptions.MethodError(json["error"]["error_msg"])
 
             elif is_raw:
                 return json
@@ -109,9 +109,10 @@ class ToolKit:
     Инструментарий
     """
 
-    def __init__ (self, token, assets_path = None):
+    def __init__ (self, token, group_id = None, assets_path = None):
         self.__logger = None
         self.assets = Assets(self, assets_path)
+        self.group_id = group_id
         self.core = BotWrap(token)
         self.replies = Replies()
         self.uploader = Uploader(self)
@@ -152,15 +153,18 @@ class ToolKit:
 
     async def __poll(self, library):
         self.core.longpoll.is_polling = True
-        group_info = await self.api.groups.getById()
-        await self.core.longpoll.update_server(group_info[0].id)
+        try:
+            await self.core.longpoll.update_server(self.group_id)
 
-        self.log(f"[{group_info[0].screen_name}] polling is started")
+            group_info = await self.api.groups.getById(group_id = self.group_id)
+            self.log(f"[{group_info[0].screen_name}] polling is started")
 
-        while self.core.longpoll.is_polling:
-            for event in await self.core.longpoll.check(group_info[0].id):
-                self.log("Got event", log_level=enums.LogLevel.DEBUG)
-                self.__event_loop.create_task(library.parse(self, event))
+            while self.core.longpoll.is_polling:
+                for event in await self.core.longpoll.check(self.group_id):
+                    print(3)
+                    self.__event_loop.create_task(library.parse(self, event))
+        except exceptions.MethodError as exc:
+            print(str(exc))
 
 
     async def start_polling(
@@ -170,8 +174,9 @@ class ToolKit:
         Начать обработку уведомлений
         """
 
-        if library and len(library.handlers) == 0:
-            library.import_library(self)
+        if library:
+            if len(library.handlers) == 0:
+                library.import_library(self)
 
         else:
             raise Exception("You should connect a library here")

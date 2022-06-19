@@ -13,7 +13,7 @@ class Response:
         for i in self.__dict__:
             setattr(self, i, self.__convert(getattr(self, i)))
 
-        self.__raw = entries
+        self.raw = entries
 
 
     def __convert(self, attr):
@@ -29,11 +29,7 @@ class Response:
             return attr
 
     def __str__(self):
-        return str(self.__raw)
-
-
-    def __dict__(self):
-        return self.__raw
+        return str(self.raw)
 
 
     def __repr__(self):

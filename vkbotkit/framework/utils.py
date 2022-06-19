@@ -5,10 +5,9 @@ Copyright 2022 kensoi
 import os
 import re
 import typing
-from ..objects.data import dump_mention
 
 PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.0a12"
+VERSION = "1.0a13"
 
 class Mention:
     """
@@ -39,6 +38,30 @@ class Mention:
     def __repr__(self):
         return self.repr
 
+
+def dump_mention(text):
+    """
+    Конвертировать текст формата [id1|text] в объект Mention
+    """
+    if text[0] != "[" or text[-1] != "]":
+        raise Exception(f"can't init mention from this text: \"{text}\" ")
+
+    text = text[1:-1]
+    obj, key = text.split("|")
+
+    if obj.startswith('id'):
+        value = int(obj[2:])
+        return Mention(value, key)
+
+    elif obj.startswith('club'):
+        value = int(obj[4:])
+        return Mention(value, key)
+
+    elif obj.startswith('public'):
+        value = int(obj[6:])
+        return Mention(value, key)
+
+    raise TypeError("Invalid page id (should be club, public or id)")
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     """
@@ -71,7 +94,7 @@ def map_folders(libdir):
         elif "__init__.py" in os.listdir(obj_path):
             return PATH_SEPARATOR.join([obj_path, "__init__.py"])
 
-    return list(map(map_func, files_list))
+    return list(filter(lambda x: x is not None, map(map_func, files_list)))
 
 
 def remove_duplicates(array):
