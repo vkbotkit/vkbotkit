@@ -1,13 +1,14 @@
 """
 Setup Script
 """
+
 import setuptools
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="vkbotkit",
-    version="1.0a11",
+    version="1.0a14",
     author="kensoi",
     author_email="kensoidev@gmail.com",
     description=(

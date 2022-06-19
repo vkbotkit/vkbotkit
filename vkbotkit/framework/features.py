@@ -3,7 +3,6 @@ Copyright 2022 kensoi
 """
 
 import asyncio
-from msilib.schema import Error
 import os
 import logging
 import logging.config
