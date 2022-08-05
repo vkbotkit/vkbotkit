@@ -12,7 +12,6 @@ from importlib.util import (
     spec_from_file_location,
     module_from_spec)
 
-
 from .utils import map_folders, convert_command, PATH_SEPARATOR
 from ..objects import data, enums, exceptions, LibraryModule
 
@@ -98,23 +97,28 @@ class CallbackLib:
             raise exceptions.LibraryTypeError(
                 "plugin library folder should be a directory, not a file")
 
-        plugin_list = map_folders(self.__libdir)
+        for module_path in map_folders(self.__libdir):
+            failed = False
+            module_root = module_path[len(self.__libdir) + 1:]
+            module_name = module_root.replace(PATH_SEPARATOR + "__init__.py", "")
 
-        for module_path in plugin_list:
             try:
                 spec = spec_from_file_location(
-                    module_path[len(self.__libdir) + 1:].replace(".py", "", 1), module_path
+                    module_path[module_path.rfind(PATH_SEPARATOR)+1:].replace(".py", "", 1),
+                    module_path
                     )
                 loaded_module = module_from_spec(spec)
                 spec.loader.exec_module(loaded_module)
                 self.import_module(loaded_module.Main)
 
             except Exception as exc:
-                toolkit.log(f"Importing plugin {module_path} failed: {str(exc)}",
-                enums.LogLevel.DEBUG)
+                failed = exc
 
-            finally:
-                toolkit.log(f"Importing plugin {module_path} succeed", enums.LogLevel.DEBUG)
+            if failed:
+                toolkit.log(
+                    f"Importing plugin {module_name} failed: {str(failed)}", enums.LogLevel.DEBUG)
+            else:
+                toolkit.log(f"Importing plugin {module_name} succeed", enums.LogLevel.DEBUG)
 
 
         self.handlers.sort(key = lambda h: h.filter.priority)
@@ -178,6 +182,9 @@ class Logger:
         self.logger.setLevel(log_level.value)
         self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
+        self.file_log = file_log
+        self.print_log = print_log
+
         if file_log:
             self.file_handler = logging.FileHandler('.log')
             self.file_handler.setLevel(log_level.value)
@@ -185,10 +192,21 @@ class Logger:
             self.logger.addHandler(self.file_handler)
 
         if print_log:
-            self.stream_handler = logging.StreamHandler()
-            self.stream_handler.setLevel(log_level.value)
-            self.stream_handler.setFormatter(self.formatter)
-            self.logger.addHandler(self.stream_handler)
+            self.log_level = log_level
+        #     self.stream_handler = logging.StreamHandler()
+        #     self.stream_handler.setLevel(log_level.value)
+        #     self.stream_handler.setFormatter(self.formatter)
+        #     self.logger.addHandler(self.stream_handler)
+
+
+    def log(self, message: str, log_level: enums.LogLevel = enums.LogLevel.INFO):
+        """
+        docstring fix
+        """
+        self.logger.log(level = log_level.value, msg = message)
+        if self.print_log:
+            if log_level.value >= self.log_level.value:
+                print(f"[{log_level.name}] {message}")
 
 
     def __repr__(self) -> str:

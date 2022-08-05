@@ -161,10 +161,9 @@ class ToolKit:
 
             while self.core.longpoll.is_polling:
                 for event in await self.core.longpoll.check(self.group_id):
-                    print(3)
                     self.__event_loop.create_task(library.parse(self, event))
         except exceptions.MethodError as exc:
-            print(str(exc))
+            self.log("Exception appeared: "+str(exc), enums.LogLevel.DEBUG)
 
 
     async def start_polling(
@@ -230,7 +229,7 @@ class ToolKit:
         """
 
         if self.__logger:
-            self.__logger.logger.log(level = log_level.value, msg = message)
+            self.__logger.log(message, log_level)
 
 
     def gen_random(self) -> int:

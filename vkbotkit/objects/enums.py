@@ -75,7 +75,7 @@ class Action(Enum):
     Типы событий в беседе
     https://dev.vk.com/api/user-long-poll/getting-started#Вложения%20и%20дополнительные%20данные
     """
-    
+
     CHAT_PHOTO_UPDATE = "chat_photo_update"
     CHAT_PHOTO_REMOVE = "chat_photo_remove"
     CHAT_CREATE = "chat_create"
