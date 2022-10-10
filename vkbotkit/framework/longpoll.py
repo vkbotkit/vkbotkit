@@ -2,6 +2,7 @@
 Copyright 2022 kensoi
 """
 
+
 class Longpoll:
     """
     Объект для прослушки VKBots Longpoll
@@ -41,12 +42,13 @@ class Longpoll:
         Запросить уведомления с сервера
         """
 
-        values = {'act': 'a_check',
-                'key': self.__key,
-                'ts': self.__ts,
-                'wait': self.__wait,
-                'rps_delay': self.__rps_delay
-                }
+        values = {
+            'act': 'a_check',
+            'key': self.__key,
+            'ts': self.__ts,
+            'wait': self.__wait,
+            'rps_delay': self.__rps_delay
+        }
 
         response = await self._https.get(self.__url, params = values)
         response = await response.json(content_type = None)

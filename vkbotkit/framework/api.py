@@ -4,6 +4,7 @@ Copyright 2022 kensoi
 
 import six
 
+
 class GetAPI:
     """
     Обёртка вокруг сессии клиента для упрощённого доступа к VK BOT API
@@ -18,16 +19,10 @@ class GetAPI:
 
 
     def __getattr__(self, method):
-        """
-        docstring patch
-        """
-
         self.string = self.string + "." if self.string else ""
 
-        return GetAPI(
-            self.https, self.method,
-            (self.string if self.method else '') + method
-        )
+        return GetAPI(self.https, self.method,
+            (self.string if self.method else '') + method)
 
 
     async def __call__(self, **kwargs):

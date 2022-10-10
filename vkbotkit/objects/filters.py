@@ -11,6 +11,8 @@ class Filter:
     """
     Объект фильтра, помещаемый в декоратор vkbotkit.objects.decorators.callback
     """
+
+    priority: int
     def __init__(self) -> None:
         self.priority = 0
 
@@ -20,106 +22,128 @@ class Filter:
         Пример проверки условий
         """
 
-        package.toolkit.log(
-            "Tried to use <vkbotkit.objects.filters.Filter>",
-            log_level = enums.LogLevel.DEBUG
-            )
+        package.toolkit.log("Tried to use <vkbotkit.objects.filters.Filter>",
+            log_level = enums.LogLevel.DEBUG)
         return True
 
 
     def __and__(self, other):
-        assert issubclass(other.__class__, Filter)
-        return AndF(self, other)
+        if issubclass(other.__class__, Filter):
+            return AndF(self, other)
+        
+        raise TypeError(f"{repr(other.__class__)} should be subclass of Filter")
 
 
     def __or__(self, other):
-        assert issubclass(other.__class__, Filter)
-        return OrF(self, other)
+        if issubclass(other.__class__, Filter):
+            return OrF(self, other)
+        
+        raise TypeError(f"{repr(other.__class__)} should be subclass of Filter")
 
 
     def __eq__(self, other):
-        assert issubclass(other.__class__, Filter)
-        return EqF(self, other)
+        if issubclass(other.__class__, Filter):
+            return Equality(self, other)
+        
+        raise TypeError(f"{repr(other.__class__)} should be subclass of Filter")
 
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} filter>"
 
 
-class NotF(Filter):
+class Negation(Filter):
     """
-    Фильтр отрицания
+    Логическое отрицание для фильтров
     """
+
     def __init__(self, callback_filter) -> None:
-        Filter.__init__(self)
-        self.priority = 0
-        if issubclass(callback_filter.__class__, Filter):
-            self.__f = callback_filter
-        else:
-            raise TypeError("NotF filter should be initialized with filter object")
+        super().__init__()
+        
+        if not issubclass(callback_filter.__class__, Filter):
+            raise TypeError(f"{repr(callback_filter.__class__)} should be subclass of Filter")
+
+        self.__f = callback_filter
+
 
     async def check(self, package) -> typing.Optional[bool]:
         return not await self.__f.check(package)
 
 
-class EqF(Filter):
+class Equality(Filter):
     """
     Фильтр приравнивания фильтров
     """
-    def __init__(self, a, b) -> None:
-        Filter.__init__(self)
-        self.priority = 0
-        self.__a = a.check
-        self.__b = b.check
+
+    def __init__(self, first_filter, second_filter) -> None:
+        if not issubclass(first_filter.__class__, Filter):
+            raise TypeError(f"{repr(first_filter.__class__)} should be subclass of Filter")
+
+        if not issubclass(second_filter.__class__, Filter):
+            raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
+
+        super().__init__()
+
+        self.first_filter = first_filter.check
+        self.second_filter = second_filter.check
 
 
     async def check(self, package) -> typing.Optional[bool]:
-        return await self.__a(package) == await self.__b(package)
+        return await self.first_filter(package) == await self.second_filter(package)
 
 
 class AndF(Filter):
     """
     Оператор И для фильтров
     """
-    def __init__(self, a, b) -> None:
-        Filter.__init__(self)
-        self.priority = 0
-        assert issubclass(a.__class__, Filter)
-        assert issubclass(b.__class__, Filter)
-        self.__a = a.check
-        self.__b = b.check
+
+    def __init__(self, first_filter, second_filter) -> None:
+        if not issubclass(first_filter.__class__, Filter):
+            raise TypeError(f"{repr(first_filter.__class__)} should be subclass of Filter")
+
+        if not issubclass(second_filter.__class__, Filter):
+            raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
+
+        super().__init__()
+        
+        self.first_filter = first_filter.check
+        self.second_filter = second_filter.check
 
 
     async def check(self, package) -> typing.Optional[bool]:
-        return await self.__a(package) and await self.__b(package)
+        return await self.first_filter(package) and await self.second_filter(package)
 
 
 class OrF(Filter):
     """
     Оператор ИЛИ для фильтров
     """
-    def __init__(self, a, b) -> None:
-        Filter.__init__(self)
-        self.priority = 0
-        assert issubclass(a.__class__, Filter)
-        assert issubclass(b.__class__, Filter)
-        self.__a = a.check
-        self.__b = b.check
+
+    def __init__(self, first_filter, second_filter) -> None:
+        if not issubclass(first_filter.__class__, Filter):
+            raise TypeError(f"{repr(first_filter.__class__)} should be subclass of Filter")
+
+        if not issubclass(second_filter.__class__, Filter):
+            raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
+
+        super().__init__()
+        
+        self.first_filter = first_filter.check
+        self.second_filter = second_filter.check
 
 
     async def check(self, package) -> typing.Optional[bool]:
-        return await self.__a(package) or await self.__b(package)
+        return await self.first_filter(package) or await self.second_filter(package)
 
 
 class WhichUpdate(Filter):
     """
     Какого типа сообщения (vkbotkit.objects.enums.Events)
     """
-    def __init__(self, types: typing.Union[list, set]):
-        Filter.__init__(self)
-        filteredtypes = filter(lambda update: isinstance(update, enums.Events), types)
-        self.types = list(filteredtypes)
-        self.priority = 0
+
+    def __init__(self, update_types: typing.Union[list, set]):
+        super().__init__()
+        self.types = list(filter(lambda update: isinstance(update, enums.Events), update_types))
 
 
     async def check(self, package) -> typing.Optional[bool]:
@@ -130,56 +154,73 @@ class IsForYou(Filter):
     """
     Содержит ли сообщение упоминания
     """
-    def __init__(self, mentions):
-        Filter.__init__(self)
-        mapped_mentions = map(lambda x: str(x).lower(), mentions)
-        self.mentions = set(mapped_mentions)
+    def __init__(self, mentions, bot_id = None, group_id = None):
+        self.mentions = set(map(lambda x: str(x).lower(), mentions))
         self.update_type = WhichUpdate({enums.Events.MESSAGE_NEW})
-        self.priority = 5
         self.bot_id = None
         self.group_id = None
 
+        super().__init__()
+        self.priority = 5
+
 
     async def check(self, package):
-        if await self.update_type.check(package):
-            if len(package.items) >= 2:
-                mention = package.items[0]
-                if isinstance(mention, str) and mention.lower() in self.mentions:
-                    return True
+        if not await self.update_type.check(package):
+            return
 
-                elif isinstance(mention, data.Mention):
-                    if not self.group_id:
-                        res = await package.toolkit.get_me()
-                        self.bot_id = abs(res.id)
+        if len(package.items) < 2:
+            return 
 
-                    return self.bot_id == mention.value
+        mention = package.items[0]
+
+        if isinstance(mention, str) and mention.lower() in self.mentions:
+            return True
+
+        if not isinstance(mention, data.Mention):
+            return
+
+        if not self.group_id:
+            res = await package.toolkit.get_me()
+            self.bot_id = abs(res.id)
+
+        return self.bot_id == mention.value
+
 
 class IsCommand(Filter):
     """
     Какая это команда
     """
+
     def __init__(self, commands):
-        Filter.__init__(self)
-        mapped_commands = map(lambda x: str(x).lower(), commands)
-        self.commands = set(mapped_commands)
+        self.commands = set(map(lambda x: str(x).lower(), commands))
         self.update_type = WhichUpdate({enums.Events.MESSAGE_NEW})
+
+        super().__init__()
         self.priority = 5
 
 
     async def check(self, package):
-        if await self.update_type.check(package):
-            if len(package.items) >= 2:
-                return package.items[1] in self.commands
+        if not await self.update_type.check(package):
+            return
+
+        if len(package.items) < 2:
+            return
+
+        return package.items[1] in self.commands
+
 
 class HasPayload(Filter):
     """
-    Payload from message
+    Есть ли в сообщении данные из словаря
     """
+
     def __init__(self):
-        Filter.__init__(self)
         self.update_type = WhichUpdate({enums.Events.MESSAGE_NEW})
+        super().__init__()
 
 
     async def check(self, package) -> typing.Optional[bool]:
-        if await self.update_type.check(package):
-            return hasattr(package, "payload")
+        if not await self.update_type.check(package):
+            return
+            
+        return hasattr(package, "payload")

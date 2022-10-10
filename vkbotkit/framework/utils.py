@@ -7,7 +7,8 @@ import re
 import typing
 
 PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.0a14"
+VERSION = "1.0a20"
+
 
 class Mention:
     """
@@ -19,9 +20,11 @@ class Mention:
 
     def __init__(self, page_id = None, page_key = None):
         self.value = page_id
+
         if page_id > 0:
             self.key = page_key if page_key else f"@id{page_id}"
             self.repr = f"[id{page_id}|{self.key}]"
+
         else:
             self.key = page_key if page_key else f"@public{abs(page_id)}"
             self.repr = f"[public{abs(page_id)}|{self.key}]"
@@ -43,6 +46,7 @@ def dump_mention(text):
     """
     Конвертировать текст формата [id1|text] в объект Mention
     """
+
     if text[0] != "[" or text[-1] != "]":
         raise Exception(f"can't init mention from this text: \"{text}\" ")
 
@@ -53,15 +57,16 @@ def dump_mention(text):
         value = int(obj[2:])
         return Mention(value, key)
 
-    elif obj.startswith('club'):
+    if obj.startswith('club'):
         value = int(obj[4:])
         return Mention(value, key)
 
-    elif obj.startswith('public'):
+    if obj.startswith('public'):
         value = int(obj[6:])
         return Mention(value, key)
 
     raise TypeError("Invalid page id (should be club, public or id)")
+
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     """
@@ -69,9 +74,11 @@ def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     """
 
     path_c = os.getcwd()
+
     if path:
         if path[0] == '.':
             path_c += path[True:]
+
         else:
             path_c = path
 
@@ -87,6 +94,7 @@ def map_folders(libdir):
 
     def map_func(name):
         obj_path = PATH_SEPARATOR.join([libdir, name])
+
         if os.path.isfile(obj_path):
             if name.endswith(".py"):
                 return obj_path
@@ -123,9 +131,9 @@ def convert_command(text:str) -> list:
     for i in filter(lambda item: item != "", re.split(r'(\[.*\])', text)):
         if i[0] == "[" and i[-1] == "]":
             items.append(dump_mention(i))
+            continue
 
-        else:
-            items.extend(smart_split(i))
+        items.extend(smart_split(i))
 
     return items
 

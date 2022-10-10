@@ -21,7 +21,8 @@ from .objects import NAME_CASES
 
 logger = logging.getLogger("VKBotKit")
 
-class BotWrap:
+
+class Core:
     """
     Ядро бота
     """
@@ -30,8 +31,8 @@ class BotWrap:
         self.__token = token
         self.__v = "5.131"
 
-        self.__session = aiohttp.ClientSession(trust_env=True)
-        self.longpoll = Longpoll(self.__session, self._method)
+        self.session = aiohttp.ClientSession(trust_env=True)
+        self.longpoll = Longpoll(self.session, self._method)
 
 
     def close(self):
@@ -39,7 +40,7 @@ class BotWrap:
         закрытие
         """
         loop = asyncio.get_event_loop()
-        loop.create_task(self.__session.close())
+        loop.create_task(self.session.close())
 
 
     @property
@@ -50,12 +51,13 @@ class BotWrap:
 
         return "https://api.vk.com/method/"
 
+
     @property
     def api(self):
         """
         docstring patch
         """
-        return GetAPI(self.__session, self._method)
+        return GetAPI(self.session, self._method)
 
 
     async def _method(self, method="groups.getById", params = None):
@@ -74,8 +76,8 @@ class BotWrap:
 
         logger.log(10, "method '%s' was called with params %s", method, str(request_data))
 
-        result = await self.__session.post(self.api_url + method, data = request_data)
-        json = await result.json(content_type=None)
+        response = await self.session.post(self.api_url + method, data = request_data)
+        json = await response.json(content_type=None)
 
         if "response" in json:
             json = json['response']
@@ -113,10 +115,11 @@ class ToolKit:
         self.__logger = None
         self.assets = Assets(self, assets_path)
         self.group_id = group_id
-        self.core = BotWrap(token)
+        self.core = Core(token)
         self.replies = Replies()
         self.uploader = Uploader(self)
         self.__poll_task = None
+        self.__event_loop = asyncio.get_event_loop()
 
 
     def __repr__(self):
@@ -132,15 +135,10 @@ class ToolKit:
 
         self.core.close()
 
-        for task in self.__event_loop.all_tasks():
+        for task in asyncio.all_tasks(self.__event_loop):
             task.cancel()
 
-        print(">> Done cancelling tasks")
-
-
-    @property
-    def __event_loop(self):
-        return asyncio.get_event_loop()
+        print(">> Done closing tasks")
 
 
     @property
@@ -152,40 +150,52 @@ class ToolKit:
 
 
     async def __poll(self, library):
+        print(1)
         self.core.longpoll.is_polling = True
+
+        print(2)
         try:
+            print(3)
             await self.core.longpoll.update_server(self.group_id)
 
             group_info = await self.api.groups.getById(group_id = self.group_id)
             self.log(f"[{group_info[0].screen_name}] polling is started")
 
+            print(4)
             while self.core.longpoll.is_polling:
                 for event in await self.core.longpoll.check(self.group_id):
                     self.__event_loop.create_task(library.parse(self, event))
+
         except exceptions.MethodError as exc:
             self.log("Exception appeared: "+str(exc), enums.LogLevel.DEBUG)
+        
+        except Exception as e:
+            print(str(e))
+            
+        self.close()
 
 
-    async def start_polling(
-        self, library:typing.Optional[CallbackLib] = None
-        ) -> None: # only for group bots
+    async def start_polling(self, library:typing.Optional[CallbackLib] = None) -> None: # only for group bots
         """
         Начать обработку уведомлений
         """
+        print("start_polling 1")
 
-        if library:
-            if len(library.handlers) == 0:
+        if not library:
+            raise Exception("You should connect a library here")
+        print("start_polling 2")
+        
+        if len(library.handlers) == 0:
                 library.import_library(self)
 
-        else:
-            raise Exception("You should connect a library here")
-
+        print("start_polling 3")
         if self.core.longpoll.is_polling:
             self.log("polling already started", log_level=enums.LogLevel.ERROR)
             raise Exception("polling already started")
 
+        print("start_polling 4")
         self.__poll_task = self.__event_loop.create_task(self.__poll(library))
-
+        print(self.__poll_task)
 
     def is_polling(self) -> bool:
         """
@@ -210,19 +220,16 @@ class ToolKit:
                 enums.LogLevel.WARNING)
 
 
-    def configure_logger(
-        self, log_level: enums.LogLevel = enums.LogLevel.INFO,
-        file_log = False, print_log = False
-        ):
+    def configure_logger(self, log_level: enums.LogLevel = enums.LogLevel.INFO,
+        log_to_file = False, log_to_console = False):
         """
         Настроить логгер
         """
 
-        self.__logger = Logger("vkbotkit", log_level, file_log, print_log)
+        self.__logger = Logger("vkbotkit", log_level, log_to_file, log_to_console)
 
 
-    def log(
-        self, message,
+    def log(self, message,
         log_level: enums.LogLevel = enums.LogLevel.INFO) -> None:
         """
         Записать сообщение в логгер
@@ -240,7 +247,7 @@ class ToolKit:
         return int(random.random() * 999999)
 
 
-    def create_keyboard(self, one_time:bool=False, inline:bool=False) -> keyboard.Keyboard:
+    def create_keyboard(self, one_time: bool=False, inline: bool=False) -> keyboard.Keyboard:
         """
         Создать клавиатуру
         """
@@ -257,6 +264,7 @@ class ToolKit:
             fields = ['screen_name']
 
         page_info = await self.api.users.get(fields=', '.join(fields), raw=True)
+
         if len(page_info) > 0:
             bot_type = "id"
 
@@ -315,59 +323,54 @@ class ToolKit:
             conversation_message_ids = package.conversation_message_id,
             peer_id = package.peer_id, delete_for_all = 1)
 
+
     async def get_chat_members(self, peer_id):
         """
         Получить список участников в беседе
         """
 
-        chat_list = await self.api.messages.getConversationMembers(
-            peer_id = peer_id)
-
+        chat_list = await self.api.messages.getConversationMembers(peer_id = peer_id)
         members = list(map(lambda x: x.member_id, chat_list.items))
-
         return members
+
 
     async def get_chat_admins(self, peer_id):
         """
         Получить список администраторов в беседе
         """
 
-        chat_list = await self.api.messages.getConversationMembers(
-            peer_id = peer_id)
+        chat_list = await self.api.messages.getConversationMembers(peer_id = peer_id)
 
-        members = map(
-                    lambda x: x.member_id if hasattr(x, "is_admin") else None,
-                    chat_list.items
-                    )
-        members = list(filter(lambda x: x is not None, members))
+        members_mapped = map(lambda x: x.member_id if hasattr(x, "is_admin") else None,
+                    chat_list.items)
+        members_filtered = list(filter(lambda x: x is not None, members_mapped))
 
-        return members
+        return members_filtered
+
 
     async def is_admin(self, peer_id: int, user_id: typing.Optional[int] = None):
         """
         Проверяет наличие прав у пользователя
         Если user_id пустой -- проверяется наличие прав у бота
         """
-        if user_id:
-            admin_list = await self.get_chat_admins(peer_id)
-            return user_id in admin_list
-
-        else:
+        if not user_id:
             try:
                 admin_list = await self.get_chat_admins(peer_id)
                 return True
 
             except exceptions.MethodError:
                 return False
+            
+        admin_list = await self.get_chat_admins(peer_id)
+        return user_id in admin_list
 
 
-    async def create_mention(
-        self, mention_id: int,
-        mention_key: typing.Optional[str] = None,
+    async def create_mention(self, mention_id: int,mention_key: typing.Optional[str] = None,
         name_case: typing.Optional[str] = None):
         """
         Создать упоминание
         """
+        
         if not mention_key:
             if mention_id > 0:
                 if name_case:
@@ -387,7 +390,6 @@ class ToolKit:
                 response = await self.api.groups.getById(group_id = mention_id)
                 mention_key = response[0].name
 
-
         return Mention(mention_id, mention_key)
 
 
@@ -406,10 +408,12 @@ class Librabot:
         self.toolkit = ToolKit(token, group_id, assetpath)
         self.library = CallbackLib(libpath)
 
+
     def close(self):
         """
-        docstring fix
+        Закрыть инструменты безопасно
         """
+
         self.toolkit.close()
 
 

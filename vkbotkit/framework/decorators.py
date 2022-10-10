@@ -4,6 +4,7 @@ Copyright 2022 kensoi
 
 import asyncio
 
+
 class Handler():
     """
     Класс обработчика события
@@ -28,6 +29,7 @@ class Handler():
         asyncio.set_event_loop(loop)
         loop.run_forever()
 
+
     @property
     def loop(self):
         """
@@ -41,6 +43,7 @@ class Handler():
         """
         Создать задачу для обработчика
         """
+        
         if await self.filter.check(package):
             return await self.callback(self.module, package)
     

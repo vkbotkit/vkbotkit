@@ -7,13 +7,12 @@ class Response:
     Объект результата запроса к серверу ВКонтакте
     """
 
+    raw: dict
+
     def __init__(self, entries):
         self.__dict__.update(entries)
-
-        for i in self.__dict__:
-            setattr(self, i, self.__convert(getattr(self, i)))
-
         self.raw = entries
+        map(lambda i: setattr(self, i, self.__convert(getattr(self, i))), self.__dict__)
 
 
     def __convert(self, attr):
@@ -22,11 +21,10 @@ class Response:
         if attr_type == dict:
             return Key(attr)
 
-        elif attr_type == list:
-            return [self.__convert(i) for i in attr]
+        if attr_type == list:
+            return list(map(self.__convert, attr))
 
-        else:
-            return attr
+        return attr
 
     def __str__(self):
         return str(self.raw)
@@ -42,10 +40,6 @@ class Key(Response):
     """
 
     def __repr__(self):
-        """
-        docstring patch
-        """
-
         return '<vkbotkit.objects.data.Key>'
 
 
@@ -83,9 +77,31 @@ class Package(Response):
     Объект обработанного уведомления
     """
 
-    id = 0
-    date = 0
-    random_id = 0
-    peer_id = 1
-    from_id = 1
-    items = []
+    important: bool
+    is_cropped: bool
+    was_listened: bool
+
+    admin_author_id: int
+    conversation_message_id: int
+    date: int
+    from_id: int
+    id: int
+    members_count: int
+    peer_id: int
+    pinned_at: int
+    random_id: int
+    update_time: int
+
+    message_tag: str
+    payload: str
+    text: str
+    ref: str
+    
+    items: list
+    attachments: list
+    fwd_messages: list
+
+    action: Key
+    geo: Key
+    keyboard: Key
+    reply_message: Key

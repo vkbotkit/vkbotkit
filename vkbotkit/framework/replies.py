@@ -5,6 +5,7 @@ Copyright 2022 kensoi
 import asyncio
 import time
 
+
 class Replies:
     """
     Система ожидания ответа в переписке
@@ -38,9 +39,10 @@ class Replies:
         self.__wait_list[task_id] = task_obj
 
         while not task_obj.ready:
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.1)
 
         self.__wait_list.pop(task_id, None)
+
         return task_obj.package
 
 
@@ -64,7 +66,6 @@ class ReplyTask:
         """
         Проверка на ожидаемость данного уведомления.
         """
-
 
         if self.__chat == pkg.peer_id and self.__from == pkg.from_id:
             self.ready = True
