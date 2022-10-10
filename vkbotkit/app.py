@@ -65,7 +65,7 @@ class Core:
         docstring patch
         """
 
-        request_data = params if params else {}
+        request_data = params or {}
         is_raw = request_data.pop("raw", False)
 
         if "access_token" not in request_data:
@@ -154,48 +154,42 @@ class ToolKit:
         self.core.longpoll.is_polling = True
 
         print(2)
-        try:
-            print(3)
-            await self.core.longpoll.update_server(self.group_id)
+        # try:
+        await self.core.longpoll.update_server(self.group_id)
+        print(4)
+        group_info = await self.api.groups.getById(group_id = self.group_id)
+        self.log(f"[{group_info[0].screen_name}] polling is started")
 
-            group_info = await self.api.groups.getById(group_id = self.group_id)
-            self.log(f"[{group_info[0].screen_name}] polling is started")
+        print(4)
+        while self.core.longpoll.is_polling:
+            for event in await self.core.longpoll.check(self.group_id):
+                self.__event_loop.create_task(library.parse(self, event))
 
-            print(4)
-            while self.core.longpoll.is_polling:
-                for event in await self.core.longpoll.check(self.group_id):
-                    self.__event_loop.create_task(library.parse(self, event))
+        # except exceptions.MethodError as exc:
+        #     self.log("Exception appeared: "+str(exc), enums.LogLevel.DEBUG)
 
-        except exceptions.MethodError as exc:
-            self.log("Exception appeared: "+str(exc), enums.LogLevel.DEBUG)
-        
-        except Exception as e:
-            print(str(e))
-            
+        # except Exception as e:
+        #     print(str(e))
+
         self.close()
 
 
-    async def start_polling(self, library:typing.Optional[CallbackLib] = None) -> None: # only for group bots
+    async def start_polling(self, library:typing.Optional[CallbackLib] = None) -> None:
         """
         Начать обработку уведомлений
         """
-        print("start_polling 1")
 
         if not library:
             raise Exception("You should connect a library here")
-        print("start_polling 2")
-        
-        if len(library.handlers) == 0:
-                library.import_library(self)
 
-        print("start_polling 3")
+        if len(library.handlers) == 0:
+            library.import_library(self)
+
         if self.core.longpoll.is_polling:
             self.log("polling already started", log_level=enums.LogLevel.ERROR)
             raise Exception("polling already started")
 
-        print("start_polling 4")
         self.__poll_task = self.__event_loop.create_task(self.__poll(library))
-        print(self.__poll_task)
 
     def is_polling(self) -> bool:
         """
@@ -360,7 +354,7 @@ class ToolKit:
 
             except exceptions.MethodError:
                 return False
-            
+
         admin_list = await self.get_chat_admins(peer_id)
         return user_id in admin_list
 
@@ -370,7 +364,7 @@ class ToolKit:
         """
         Создать упоминание
         """
-        
+
         if not mention_key:
             if mention_id > 0:
                 if name_case:
