@@ -12,7 +12,8 @@ def message(message_to_print):
     """
     Packaet Logger
     """
-    message_formatted = PACKAET_MESSAGE_COVER.format(screen_name = PACKAET_SCREEN_NAME, message = message_to_print)
+    message_formatted = PACKAET_MESSAGE_COVER.format(
+        screen_name = PACKAET_SCREEN_NAME, message = message_to_print)
     print(message_formatted)
 
 

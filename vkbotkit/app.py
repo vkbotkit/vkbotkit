@@ -57,6 +57,7 @@ class Core:
         """
         docstring patch
         """
+        
         return GetAPI(self.session, self._method)
 
 
@@ -170,8 +171,8 @@ class ToolKit:
         self.log(f"longpoll started at @{group_info.screen_name}")
 
         while self.core.longpoll.is_polling:
-            map(lambda event: self.__event_loop.create_task(library.parse(self, event)),
-                await self.core.longpoll.check(group_info.id))
+            for event in await self.core.longpoll.check(group_info.id):
+                self.__event_loop.create_task(library.parse(self, event))
 
         self.close()
 

@@ -48,7 +48,6 @@ class Longpoll:
         }
         response = await self._https.get(self.__url, params = values)
         response = await response.json(content_type = None)
-        print(response)
         if 'failed' not in response:
             self.__ts = response['ts']
 

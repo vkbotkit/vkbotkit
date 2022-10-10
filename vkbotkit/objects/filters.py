@@ -4,7 +4,7 @@ Copyright 2022 kensoi
 
 import typing
 from . import enums
-from . import data
+from ..framework.utils import Mention
 
 
 class Filter:
@@ -30,21 +30,21 @@ class Filter:
     def __and__(self, other):
         if issubclass(other.__class__, Filter):
             return AndF(self, other)
-        
+
         raise TypeError(f"{repr(other.__class__)} should be subclass of Filter")
 
 
     def __or__(self, other):
         if issubclass(other.__class__, Filter):
             return OrF(self, other)
-        
+
         raise TypeError(f"{repr(other.__class__)} should be subclass of Filter")
 
 
     def __eq__(self, other):
         if issubclass(other.__class__, Filter):
             return Equality(self, other)
-        
+
         raise TypeError(f"{repr(other.__class__)} should be subclass of Filter")
 
 
@@ -59,7 +59,7 @@ class Negation(Filter):
 
     def __init__(self, callback_filter) -> None:
         super().__init__()
-        
+
         if not issubclass(callback_filter.__class__, Filter):
             raise TypeError(f"{repr(callback_filter.__class__)} should be subclass of Filter")
 
@@ -105,7 +105,7 @@ class AndF(Filter):
             raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
 
         super().__init__()
-        
+
         self.first_filter = first_filter.check
         self.second_filter = second_filter.check
 
@@ -127,7 +127,7 @@ class OrF(Filter):
             raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
 
         super().__init__()
-        
+
         self.first_filter = first_filter.check
         self.second_filter = second_filter.check
 
@@ -157,8 +157,8 @@ class IsForYou(Filter):
     def __init__(self, mentions, bot_id = None, group_id = None):
         self.mentions = set(map(lambda x: str(x).lower(), mentions))
         self.update_type = WhichUpdate({enums.Events.MESSAGE_NEW})
-        self.bot_id = None
-        self.group_id = None
+        self.bot_id = bot_id
+        self.group_id = group_id
 
         super().__init__()
         self.priority = 5
@@ -169,14 +169,14 @@ class IsForYou(Filter):
             return
 
         if len(package.items) < 2:
-            return 
+            return
 
         mention = package.items[0]
 
         if isinstance(mention, str) and mention.lower() in self.mentions:
             return True
 
-        if not isinstance(mention, data.Mention):
+        if not isinstance(mention, Mention):
             return
 
         if not self.group_id:
@@ -222,5 +222,20 @@ class HasPayload(Filter):
     async def check(self, package) -> typing.Optional[bool]:
         if not await self.update_type.check(package):
             return
-            
+
         return hasattr(package, "payload")
+
+
+class NewUser(Filter):
+    """
+    Фильтр оповещений о новых участниках
+    """
+
+    async def check(self, package):
+        if not package.action:
+            return
+
+        if not hasattr(package.action, "type"):
+            return
+
+        return package.action == "chat_invite_user"

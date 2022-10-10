@@ -5,14 +5,21 @@ Copyright 2022 kensoi
 from ..framework.decorators import Handler
 from ..framework.utils import Mention
 
+
 NAME_CASES = ['nom', 'gen','dat', 'acc', 'ins', 'abl']
 
-def callback(callback_filter):
+
+def callback(command_filter):
     """
     Прикрепить к обработчику фильтры
     """
+    def decorator(command_handler):
+        def wrapper(self):
+            return Handler(command_filter, command_handler, self)
 
-    return lambda function: lambda self: Handler(callback_filter, function, self)
+        return wrapper
+
+    return decorator
 
 class LibraryModule:
     """
