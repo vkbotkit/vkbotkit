@@ -24,7 +24,6 @@ class Longpoll:
         """
         Обновить сервер
         """
-
         response = await self._method('groups.getLongPollServer', {
             'raw': True,
             'group_id': group_id}
@@ -34,7 +33,6 @@ class Longpoll:
             self.__ts = response['ts']
         self.__key = response['key']
         self.__url = response['server']
-
 
 
     async def check(self, group_id):
