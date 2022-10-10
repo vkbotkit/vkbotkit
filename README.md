@@ -6,5 +6,5 @@
 
 ## Установка
 ```sh
-pip install https://github.com/kensoi/vkbotkit/tarball/dev/
+pip install https://github.com/kensoi/vkbotkit/tarball/release/
 ```
