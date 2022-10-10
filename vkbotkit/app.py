@@ -149,31 +149,6 @@ class ToolKit:
         return self.core.api
 
 
-    async def __poll(self, library):
-        print(1)
-        self.core.longpoll.is_polling = True
-
-        print(2)
-        # try:
-        await self.core.longpoll.update_server(self.group_id)
-        print(4)
-        group_info = await self.api.groups.getById(group_id = self.group_id)
-        self.log(f"[{group_info[0].screen_name}] polling is started")
-
-        print(4)
-        while self.core.longpoll.is_polling:
-            for event in await self.core.longpoll.check(self.group_id):
-                self.__event_loop.create_task(library.parse(self, event))
-
-        # except exceptions.MethodError as exc:
-        #     self.log("Exception appeared: "+str(exc), enums.LogLevel.DEBUG)
-
-        # except Exception as e:
-        #     print(str(e))
-
-        self.close()
-
-
     async def start_polling(self, library:typing.Optional[CallbackLib] = None) -> None:
         """
         Начать обработку уведомлений
@@ -189,7 +164,17 @@ class ToolKit:
             self.log("polling already started", log_level=enums.LogLevel.ERROR)
             raise Exception("polling already started")
 
-        self.__poll_task = self.__event_loop.create_task(self.__poll(library))
+        self.core.longpoll.is_polling = True
+        group_info = await self.get_me()
+        await self.core.longpoll.update_server(group_info.id)
+        self.log(f"longpoll started at @{group_info.screen_name}")
+
+        while self.core.longpoll.is_polling:
+            map(lambda event: self.__event_loop.create_task(library.parse(self, event)),
+                await self.core.longpoll.check(group_info.id))
+
+        self.close()
+
 
     def is_polling(self) -> bool:
         """

@@ -39,7 +39,6 @@ class Longpoll:
         """
         Запросить уведомления с сервера
         """
-
         values = {
             'act': 'a_check',
             'key': self.__key,
@@ -47,10 +46,9 @@ class Longpoll:
             'wait': self.__wait,
             'rps_delay': self.__rps_delay
         }
-
         response = await self._https.get(self.__url, params = values)
         response = await response.json(content_type = None)
-
+        print(response)
         if 'failed' not in response:
             self.__ts = response['ts']
 

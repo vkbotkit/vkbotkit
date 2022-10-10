@@ -39,7 +39,7 @@ class Assets:
 
     def __call__(self, *args, **kwargs):
         args = list(args)
-        
+
         if len(args) > 0:
             args[0] = self.__path + args[0]
 
@@ -110,8 +110,9 @@ class CallbackLib:
                 failed = exc
 
             if failed:
-                toolkit.log(f"Importing plugin {module_name} failed: {str(failed)}", enums.LogLevel.DEBUG)
-            
+                toolkit.log(f"Importing plugin {module_name} failed: {str(failed)}", 
+                enums.LogLevel.DEBUG)
+
             toolkit.log(f"Importing plugin {module_name} succeed", enums.LogLevel.DEBUG)
 
         self.handlers.sort(key = lambda h: h.filter.priority)
@@ -200,7 +201,7 @@ class Logger:
 
         self.logger.log(level = log_level.value, msg = message)
 
-        if self.print_log:
+        if not self.print_log:
             return
 
         if log_level.value >= self.log_level.value:
