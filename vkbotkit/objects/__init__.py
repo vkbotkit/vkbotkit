@@ -3,7 +3,7 @@ Copyright 2022 kensoi
 """
 
 from ..framework.handler import Handler
-from ..framework.utils import Mention
+from ..utils import Mention
 
 
 NAME_CASES = ['nom', 'gen','dat', 'acc', 'ins', 'abl']

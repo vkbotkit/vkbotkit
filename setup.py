@@ -9,7 +9,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="vkbotkit",
-    version="1.1a2",
+    version="1.1a3",
     author="kensoi",
     author_email="kensoidev@gmail.com",
     description=(
@@ -17,11 +17,11 @@ setuptools.setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://kensoi.github.io/vkbotkit",
+    url="https://vkbotkit.github.io/vkbotkit",
     project_urls={
-        "Releases": "https://github.com/kensoi/vkbotkit/releases",
-        "Bug Tracker": "https://github.com/kensoi/vkbotkit/issues",
-        "Bot Template": "https://github.com/kensoi/vkbotkit_app/",
+        "Releases": "https://github.com/vkbotkit/vkbotkit/releases",
+        "Bug Tracker": "https://github.com/vkbotkit/vkbotkit/issues",
+        "Bot Template": "https://github.com/vkbotkit/template-bot/",
     },
     classifiers=[
         "Programming Language :: Python :: 3",

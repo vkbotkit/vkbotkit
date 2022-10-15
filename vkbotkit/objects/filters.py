@@ -4,7 +4,7 @@ Copyright 2022 kensoi
 
 import typing
 from . import enums
-from ..framework.utils import Mention
+from ..utils import Mention
 
 
 class Filter:

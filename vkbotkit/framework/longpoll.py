@@ -44,7 +44,7 @@ class Longpoll:
             'wait': self.__wait,
             'rps_delay': self.__rps_delay
         }
-        
+
         response = await self._https.get(self.__url, params = values)
         response = await response.json(content_type = None)
 

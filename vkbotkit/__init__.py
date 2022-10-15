@@ -2,7 +2,7 @@
 Copyright 2022 kensoi
 """
 
-from .app import Core, ToolKit, Librabot
+from .framework import Core, ToolKit, Librabot
 from .utils import VERSION as __version__
 
 __title__ = "vkbotkit"

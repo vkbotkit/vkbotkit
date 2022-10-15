@@ -3,108 +3,19 @@ Copyright 2022 kensoi
 """
 
 import asyncio
-import logging
-import os
-import random
 import typing
+import random
 
-import aiohttp
+from .core import Core
 
-from .framework.longpoll import Longpoll
-from .framework.api import GetAPI
-from .framework.features import Assets, CallbackLib, Logger, Uploader
-from .framework.replies import Replies
-from .framework.utils import PATH_SEPARATOR, Mention, dump_mention
-
-from .objects import data, exceptions, enums, keyboard
-from .objects import NAME_CASES
-
-logger = logging.getLogger("VKBotKit")
-
-
-class Core:
-    """
-    Ядро бота
-    """
-
-    def __init__(self, token):
-        self.__token = token
-        self.__v = "5.131"
-
-        self.session = aiohttp.ClientSession(trust_env=True)
-        self.longpoll = Longpoll(self.session, self._method)
-
-
-    def close(self):
-        """
-        закрытие
-        """
-        loop = asyncio.get_event_loop()
-        loop.create_task(self.session.close())
-
-
-    @property
-    def api_url(self):
-        """
-        docstring patch
-        """
-
-        return "https://api.vk.com/method/"
-
-
-    @property
-    def api(self):
-        """
-        docstring patch
-        """
-        
-        return GetAPI(self.session, self._method)
-
-
-    async def _method(self, method="groups.getById", params = None):
-        """
-        docstring patch
-        """
-
-        request_data = params or {}
-        is_raw = request_data.pop("raw", False)
-
-        if "access_token" not in request_data:
-            request_data["access_token"] = self.__token
-
-        if "v" not in request_data:
-            request_data["v"] = self.__v
-
-        logger.log(10, "method '%s' was called with params %s", method, str(request_data))
-
-        response = await self.session.post(self.api_url + method, data = request_data)
-        json = await response.json(content_type=None)
-
-        if "response" in json:
-            json = json['response']
-
-        if isinstance(json, dict):
-            if "error" in json:
-                raise exceptions.MethodError(json["error"]["error_msg"])
-
-            elif is_raw:
-                return json
-
-            else:
-                return data.Response(json)
-
-        elif isinstance(json, list):
-            if is_raw:
-                return json
-
-            return [data.Response(i) for i in json]
-
-        else:
-            return json
-
-
-    def __repr__(self):
-        return "<vkbotkit.Core>"
+from .api import GetAPI
+from .assets import Assets
+from .replies import Replies
+from .uploader import Uploader
+from .logger import Logger
+from .library import CallbackLib
+from ..objects import data, exceptions, enums, keyboard, NAME_CASES
+from ..utils import Mention, dump_mention
 
 
 class ToolKit:
@@ -371,35 +282,3 @@ class ToolKit:
                 mention_key = response[0].name
 
         return Mention(mention_id, mention_key)
-
-
-class Librabot:
-    """
-    Объект бота
-    """
-
-    def __init__(self, token, group_id = None, assetpath = None, libpath = None):
-        if not assetpath:
-            assetpath = os.getcwd() + PATH_SEPARATOR + "assets"
-
-        if not libpath:
-            libpath = os.getcwd() + PATH_SEPARATOR + "library"
-
-        self.toolkit = ToolKit(token, group_id, assetpath)
-        self.library = CallbackLib(libpath)
-
-
-    def close(self):
-        """
-        Закрыть инструменты безопасно
-        """
-
-        self.toolkit.close()
-
-
-    async def start_polling(self) -> None:
-        """
-        Начать обработку уведомлений с сервера ВКонтакте
-        """
-
-        await self.toolkit.start_polling(self.library)
