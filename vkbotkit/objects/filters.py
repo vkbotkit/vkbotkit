@@ -4,7 +4,7 @@ Copyright 2022 kensoi
 
 import typing
 from . import enums
-from ..utils import Mention
+from .mention import Mention
 
 
 class Filter:

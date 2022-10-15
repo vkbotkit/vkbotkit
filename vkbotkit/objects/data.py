@@ -96,7 +96,7 @@ class Package(Response):
     payload: str
     text: str
     ref: str
-    
+
     items: list
     attachments: list
     fwd_messages: list

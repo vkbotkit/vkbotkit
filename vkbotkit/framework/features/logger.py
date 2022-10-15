@@ -3,7 +3,7 @@ Copyright 2022 kensoi
 """
 
 import logging
-from ..objects import enums
+from ...objects import enums
 
 class Logger:
     """

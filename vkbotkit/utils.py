@@ -6,39 +6,10 @@ import os
 import re
 import typing
 
-PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.1a3"
+from .objects import Mention, PATH_SEPARATOR
 
 
-class Mention:
-    """
-    Объект упоминания
-    """
-
-    __slots__ = ('value', 'key', 'repr')
-
-
-    def __init__(self, page_id = None, page_key = None):
-        self.value = page_id
-
-        page_type = "id" if page_id > 0 else "public"
-        self.key = page_key if page_key else f"@{page_type}{abs(page_id)}"
-        self.repr = f"[id{abs(page_id)}|{self.key}]"
-
-
-    def __int__(self):
-        return self.value
-
-
-    def __str__(self):
-        return self.key
-
-
-    def __repr__(self):
-        return self.repr
-
-
-def dump_mention(text):
+def dump_mention(text: str) -> Mention:
     """
     Конвертировать текст формата [id1|text] в объект Mention
     """
@@ -64,7 +35,7 @@ def dump_mention(text):
     raise TypeError("Invalid page id (should be club, public or id)")
 
 
-def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
+def convert_path(path: typing.Optional[str] = None, path_type: str = "") -> str:
     """
     Получить местоположение папки <path_type>
     """
@@ -77,14 +48,14 @@ def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     return PATH_SEPARATOR.join([path_c, path_type])
 
 
-def map_folders(libdir):
+def map_folders(libdir) -> list:
     """
     Фильтрация + конвертация плагинов в библиотеке бота
     """
 
     files_list = os.listdir(libdir)
 
-    def map_func(name):
+    def name_filter(name):
         obj_path = PATH_SEPARATOR.join([libdir, name])
 
         if os.path.isfile(obj_path):
@@ -94,7 +65,10 @@ def map_folders(libdir):
         elif "__init__.py" in os.listdir(obj_path):
             return PATH_SEPARATOR.join([obj_path, "__init__.py"])
 
-    return list(filter(lambda x: x is not None, map(map_func, files_list)))
+    filtered_names = map(name_filter, files_list)
+    removed_empty_items = filter(lambda x: x is not None, filtered_names)
+
+    return list(removed_empty_items)
 
 
 def remove_duplicates(array):

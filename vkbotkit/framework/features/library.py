@@ -6,11 +6,11 @@ import asyncio
 import os
 from importlib.util import spec_from_file_location, module_from_spec
 
-from ..utils import map_folders, convert_command, PATH_SEPARATOR
-from ..objects import data, enums, exceptions, LibraryModule
+from ...utils import map_folders, convert_command, PATH_SEPARATOR
+from ...objects import data, enums, exceptions, Library
 
 
-class CallbackLib:
+class LibraryParser:
     """
     Рабочий класс vkbotkit для работы с библиотеками
     """
@@ -70,7 +70,7 @@ class CallbackLib:
 
         lib_called = lib()
 
-        if isinstance(lib_called, LibraryModule):
+        if isinstance(lib_called, Library):
             self.handlers.extend(lib_called.handlers)
 
 

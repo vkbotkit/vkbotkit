@@ -8,12 +8,7 @@ import random
 
 from .core import Core
 
-from .api import GetAPI
-from .assets import Assets
-from .replies import Replies
-from .uploader import Uploader
-from .logger import Logger
-from .library import CallbackLib
+from .features import GetAPI, Assets, Replies, Uploader, Logger, CallbackLib
 from ..objects import data, exceptions, enums, keyboard, NAME_CASES
 from ..utils import Mention, dump_mention
 

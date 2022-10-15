@@ -4,12 +4,13 @@ Setup Script
 
 import setuptools
 
+
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="vkbotkit",
-    version="1.1a3",
+    version="1.1a4",
     author="kensoi",
     author_email="kensoidev@gmail.com",
     description=(
@@ -21,7 +22,8 @@ setuptools.setup(
     project_urls={
         "Releases": "https://github.com/vkbotkit/vkbotkit/releases",
         "Bug Tracker": "https://github.com/vkbotkit/vkbotkit/issues",
-        "Bot Template": "https://github.com/vkbotkit/template-bot/",
+        "Template": "https://github.com/vkbotkit/template/",
+        "Examples": "https://github.com/vkbotkit/examples/",
     },
     classifiers=[
         "Programming Language :: Python :: 3",

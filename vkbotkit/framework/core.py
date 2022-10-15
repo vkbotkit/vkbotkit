@@ -7,8 +7,7 @@ import logging
 
 import aiohttp
 
-from ..framework.longpoll import Longpoll
-from ..framework.api import GetAPI
+from .features import GetAPI, Longpoll
 from ..objects import exceptions, data
 
 logger = logging.getLogger("VKBotKit")

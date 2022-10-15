@@ -5,7 +5,7 @@ Copyright 2022 kensoi
 import os
 
 from .toolkit import ToolKit
-from .library import CallbackLib
+from .features import LibraryParser
 from ..utils import PATH_SEPARATOR
 
 class Librabot:
@@ -21,7 +21,7 @@ class Librabot:
             libpath = os.getcwd() + PATH_SEPARATOR + "library"
 
         self.toolkit = ToolKit(token, group_id, assetpath)
-        self.library = CallbackLib(libpath)
+        self.library = LibraryParser(libpath)
 
 
     def close(self):
