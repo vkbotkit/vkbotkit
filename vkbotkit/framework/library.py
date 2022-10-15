@@ -6,8 +6,8 @@ import asyncio
 import os
 from importlib.util import spec_from_file_location, module_from_spec
 
-from ...utils import map_folders, convert_command, PATH_SEPARATOR
-from ...objects import data, enums, exceptions, Library
+from ..utils import map_folders, convert_command
+from ..objects import data, enums, exceptions, Library, PATH_SEPARATOR
 
 
 class LibraryParser:

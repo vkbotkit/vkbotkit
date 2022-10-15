@@ -3,7 +3,7 @@ Copyright 2022 kensoi
 """
 
 import os
-from ...utils import PATH_SEPARATOR
+from ..utils import PATH_SEPARATOR
 
 class Assets:
     """

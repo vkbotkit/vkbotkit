@@ -26,11 +26,11 @@ class GetAPI:
 
 
     async def __call__(self, **kwargs):
-        iterated = six.iteritems(kwargs)
-        list_instances = filter(lambda _, value: isinstance(value, (list, tuple)), iterated)
-        comma_joined = {key: ','.join(str(x) for x in value) for key, value in list_instances}
+        for key, value in six.iteritems(kwargs):
+            if isinstance(value, (list, tuple)):
+                kwargs[key] = ','.join(str(x) for x in value)
 
-        return await self.method(self.string, **comma_joined)
+        return await self.method(self.string, kwargs)
 
 
     def __repr__(self):

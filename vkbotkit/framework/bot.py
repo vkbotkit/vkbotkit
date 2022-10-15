@@ -5,13 +5,14 @@ Copyright 2022 kensoi
 import asyncio
 import logging
 import os
-import typing
 
 import aiohttp
 
-from vkbotkit.framework.features.api import GetAPI
+from .api import GetAPI
 
-from .features import LibraryParser, Longpoll, ToolKit
+from .library import LibraryParser
+from .longpoll import Longpoll
+from .toolkit import ToolKit
 from ..objects import exceptions, data, enums
 from ..utils import PATH_SEPARATOR
 
@@ -74,8 +75,6 @@ class Bot:
         if "v" not in request_data:
             request_data["v"] = self.api_version
 
-        logger.log(10, "method '%s' was called with params %s", method, str(request_data))
-
         response = await self.session.post(self.api_url + method, data = request_data)
         json = await response.json(content_type=None)
 
@@ -116,7 +115,7 @@ class Bot:
         Начать обработку уведомлений с сервера ВКонтакте
         """
         if len(self.library.handlers) == 0:
-            self.library.import_library(self)
+            self.library.import_library(self.toolkit)
 
         if self.longpoll.is_polling:
             self.toolkit.log("polling already started", log_level=enums.LogLevel.ERROR)

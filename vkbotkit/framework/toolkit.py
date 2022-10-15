@@ -5,7 +5,10 @@ Copyright 2022 kensoi
 import typing
 import random
 
-from . import Assets, Replies, Uploader, Logger
+from .assets import Assets
+from .replies import Replies
+from .uploader import Uploader
+from .logger import Logger
 from ..objects import data, exceptions, enums, keyboard, NAME_CASES
 from ..utils import Mention, dump_mention
 
@@ -98,7 +101,7 @@ class ToolKit:
                 bot_type = "club"
 
         return data.Response({
-            **page_info[0], "bot_type": bot_type
+            **page_info['groups'][0], "bot_type": bot_type
         })
 
 
