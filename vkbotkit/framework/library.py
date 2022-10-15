@@ -82,11 +82,9 @@ class LibraryParser:
         if not isinstance(package, data.Package):
             package = await self._convert_event(package)
 
-        if not hasattr(package, "toolkit"):
-            package.toolkit = toolkit
-
         if not toolkit.replies.check(package):
-            await asyncio.gather(*map(lambda h: h.create_task(package), self.handlers))
+            handler_tasks = list(map(lambda h: h.create_task(package, toolkit), self.handlers))
+            await asyncio.gather(*handler_tasks)
 
 
     async def _convert_event(self, event):

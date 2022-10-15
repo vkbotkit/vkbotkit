@@ -17,13 +17,13 @@ class Wrapper():
         return "<vkbotkit.objects.callback.Wrapper>"
 
 
-    async def create_task(self, package):
+    async def create_task(self, package, toolkit):
         """
         Создать задачу для обработчика
         """
 
         if await self.filter.check(package):
-            return await self.callback(self.module, package)
+            return await self.callback(self.module, package, toolkit)
 
 
 class Library:

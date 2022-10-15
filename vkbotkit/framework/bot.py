@@ -128,6 +128,5 @@ class Bot:
 
         while self.toolkit.is_polling:
             for event in await self.longpoll.check(group_info.id):
-                self.__event_loop.create_task(self.library.parse(self, event))
-
+                self.__event_loop.create_task(self.library.parse(self.toolkit, event))
         self.close()
