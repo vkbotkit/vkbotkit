@@ -2,13 +2,10 @@
 Copyright 2022 kensoi
 """
 
-import asyncio
 import typing
 import random
 
-from .core import Core
-
-from .features import GetAPI, Assets, Replies, Uploader, Logger, CallbackLib
+from . import Assets, Replies, Uploader, Logger
 from ..objects import data, exceptions, enums, keyboard, NAME_CASES
 from ..utils import Mention, dump_mention
 
@@ -18,77 +15,17 @@ class ToolKit:
     Инструментарий
     """
 
-    def __init__ (self, token, group_id = None, assets_path = None):
+    def __init__ (self, api, assets_path = None):
         self.__logger = None
         self.assets = Assets(self, assets_path)
-        self.group_id = group_id
-        self.core = Core(token)
         self.replies = Replies()
         self.uploader = Uploader(self)
-        self.__poll_task = None
-        self.__event_loop = asyncio.get_event_loop()
+        self.api = api
+        self.is_polling = False
 
 
     def __repr__(self):
         return "<vkbotkit.ToolKit>"
-
-
-    def close(self):
-        """
-        Закрыть инструменты безопасно
-        """
-        if self.__poll_task:
-            self.__poll_task.cancel()
-
-        self.core.close()
-
-        for task in asyncio.all_tasks(self.__event_loop):
-            task.cancel()
-
-        print(">> Done closing tasks")
-
-
-    @property
-    def api(self) -> GetAPI:
-        """
-        Получить обёртку для VK API
-        """
-        return self.core.api
-
-
-    async def start_polling(self, library:typing.Optional[CallbackLib] = None) -> None:
-        """
-        Начать обработку уведомлений
-        """
-
-        if not library:
-            raise Exception("You should connect a library here")
-
-        if len(library.handlers) == 0:
-            library.import_library(self)
-
-        if self.core.longpoll.is_polling:
-            self.log("polling already started", log_level=enums.LogLevel.ERROR)
-            raise Exception("polling already started")
-
-        self.core.longpoll.is_polling = True
-        group_info = await self.get_me()
-        await self.core.longpoll.update_server(group_info.id)
-        self.log(f"longpoll started at @{group_info.screen_name}")
-
-        while self.core.longpoll.is_polling:
-            for event in await self.core.longpoll.check(group_info.id):
-                self.__event_loop.create_task(library.parse(self, event))
-
-        self.close()
-
-
-    def is_polling(self) -> bool:
-        """
-        Работает ли в данный момент поллинг.
-        """
-
-        return self.core.longpoll.is_polling
 
 
     def stop_polling(self) -> None:
@@ -96,8 +33,8 @@ class ToolKit:
         Остановить обработку уведомлений с сервера
         """
 
-        if self.core.longpoll.is_polling:
-            self.core.longpoll.is_polling = False
+        if self.is_polling:
+            self.is_polling = False
             self.log("polling finished", enums.LogLevel.DEBUG)
 
         else:
