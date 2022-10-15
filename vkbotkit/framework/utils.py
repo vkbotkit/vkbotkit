@@ -7,7 +7,7 @@ import re
 import typing
 
 PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.1a1"
+VERSION = "1.1a2"
 
 
 class Mention:
@@ -21,13 +21,9 @@ class Mention:
     def __init__(self, page_id = None, page_key = None):
         self.value = page_id
 
-        if page_id > 0:
-            self.key = page_key if page_key else f"@id{page_id}"
-            self.repr = f"[id{page_id}|{self.key}]"
-
-        else:
-            self.key = page_key if page_key else f"@public{abs(page_id)}"
-            self.repr = f"[public{abs(page_id)}|{self.key}]"
+        page_type = "id" if page_id > 0 else "public"
+        self.key = page_key if page_key else f"@{page_type}{abs(page_id)}"
+        self.repr = f"[id{abs(page_id)}|{self.key}]"
 
 
     def __int__(self):
@@ -76,11 +72,7 @@ def convert_path(path: typing.Optional[str] = None, path_type: str = ""):
     path_c = os.getcwd()
 
     if path:
-        if path[0] == '.':
-            path_c += path[True:]
-
-        else:
-            path_c = path
+        path_c += path[path[0] == '.':]
 
     return PATH_SEPARATOR.join([path_c, path_type])
 

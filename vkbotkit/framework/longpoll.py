@@ -24,10 +24,8 @@ class Longpoll:
         """
         Обновить сервер
         """
-        response = await self._method('groups.getLongPollServer', {
-            'raw': True,
-            'group_id': group_id}
-            )
+        data = {'raw': True, 'group_id': group_id}
+        response = await self._method('groups.getLongPollServer', data)
 
         if update_ts:
             self.__ts = response['ts']
@@ -46,14 +44,16 @@ class Longpoll:
             'wait': self.__wait,
             'rps_delay': self.__rps_delay
         }
+        
         response = await self._https.get(self.__url, params = values)
         response = await response.json(content_type = None)
+
         if 'failed' not in response:
             self.__ts = response['ts']
 
             return response['updates']
 
-        elif response['failed'] == 1:
+        if response['failed'] == 1:
             self.__ts = response['ts']
 
         elif response['failed'] == 2:

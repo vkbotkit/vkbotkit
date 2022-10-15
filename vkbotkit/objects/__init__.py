@@ -2,7 +2,7 @@
 Copyright 2022 kensoi
 """
 
-from ..framework.decorators import Handler
+from ..framework.handler import Handler
 from ..framework.utils import Mention
 
 

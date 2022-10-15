@@ -17,17 +17,7 @@ class Handler():
 
 
     def __repr__(self):
-        return "<vkbotkit.framework.decorators.Handler>"
-
-
-    def run(self):
-        """
-        Запуск обработчика внутри потока
-        """
-
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_forever()
+        return "<vkbotkit.framework.handler.Handler>"
 
 
     @property
@@ -43,7 +33,7 @@ class Handler():
         """
         Создать задачу для обработчика
         """
-        
+
         if await self.filter.check(package):
             return await self.callback(self.module, package)
     

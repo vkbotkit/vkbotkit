@@ -19,7 +19,7 @@ class Assets:
 
     def __init__(self, sdk, assets = None):
         if not assets:
-            assets = PATH_SEPARATOR.join([os.getcwd(),"assets", ""])
+            assets = PATH_SEPARATOR.join([os.getcwd(), "assets", ""])
 
         if assets[-1] != PATH_SEPARATOR:
             assets += PATH_SEPARATOR
@@ -46,7 +46,9 @@ class Assets:
         elif 'file' in kwargs:
             kwargs['file'] = self.__path + kwargs['file']
 
-        return open(*args, **kwargs)
+        encoding = kwargs.pop('encoding') if 'encoding' in kwargs else "utf-8"
+
+        return open(encoding = encoding, *args, **kwargs)
 
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -94,24 +96,15 @@ class CallbackLib:
                 "plugin library folder should be a directory, not a file")
 
         for module_path in map_folders(self.__libdir):
-            failed = False
             module_root = module_path[len(self.__libdir) + 1:]
             module_name = module_root.replace(PATH_SEPARATOR + "__init__.py", "")
 
-            try:
-                spec = spec_from_file_location(
-                    module_path[module_path.rfind(PATH_SEPARATOR)+1:].replace(".py", "", 1),
-                    module_path)
-                loaded_module = module_from_spec(spec)
-                spec.loader.exec_module(loaded_module)
-                self.import_module(loaded_module.Main)
-
-            except Exception as exc:
-                failed = exc
-
-            if failed:
-                toolkit.log(f"Importing plugin {module_name} failed: {str(failed)}", 
-                enums.LogLevel.DEBUG)
+            spec = spec_from_file_location(
+                module_path[module_path.rfind(PATH_SEPARATOR)+1:].replace(".py", "", 1),
+                module_path)
+            loaded_module = module_from_spec(spec)
+            spec.loader.exec_module(loaded_module)
+            self.import_module(loaded_module.Main)
 
             toolkit.log(f"Importing plugin {module_name} succeed", enums.LogLevel.DEBUG)
 
