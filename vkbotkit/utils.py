@@ -7,11 +7,16 @@ import re
 import typing
 
 from .objects import Mention, PATH_SEPARATOR
+from .objects.filters import Filter
+from .objects.enums import Events, LogLevel
+from .objects.data import Package
+from .objects import exceptions
+from .framework.toolkit import ToolKit
 
 
 def dump_mention(text: str) -> Mention:
     """
-    Конвертировать текст формата [id1|text] в объект Mention
+    Конвертировать шаблон формата [id1|text] в объект Mention
     """
 
     if text[0] != "[" or text[-1] != "]":
@@ -21,18 +26,18 @@ def dump_mention(text: str) -> Mention:
     obj, key = text.split("|")
 
     if obj.startswith('id'):
-        value = int(obj[2:])
-        return Mention(value, key)
+        value = 2
 
-    if obj.startswith('club'):
-        value = int(obj[4:])
-        return Mention(value, key)
+    elif obj.startswith('club'):
+        value = 4
 
-    if obj.startswith('public'):
-        value = int(obj[6:])
-        return Mention(value, key)
+    elif obj.startswith('public'):
+        value = 6
 
-    raise TypeError("Invalid page id (should be club, public or id)")
+    else:
+        raise TypeError("Invalid page id (should be club, public or id)")
+
+    return Mention(int(obj[value:]), key)
 
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = "") -> str:
@@ -93,20 +98,21 @@ def convert_command(text:str) -> list:
     """
 
     items = []
+    text_filtered = filter(lambda item: item != "", re.split(r'(\[.*\])', text))
 
-    for i in filter(lambda item: item != "", re.split(r'(\[.*\])', text)):
+    for i in text_filtered:
         if i[0] == "[" and i[-1] == "]":
             items.append(dump_mention(i))
-            continue
 
-        items.extend(smart_split(i))
+        else:
+            items.extend(smart_split(i))
 
     return items
 
 
-def censor_result(result: str): # copied from jieggii/witless
+def censor_result(result: str):
     """
-    цензурировать запрещённые слова
+    Цензор запрещённых слов ВКонтакте. Скопировано из jieggii/witless
     """
 
     blacklisted_tokens = [
@@ -127,3 +133,54 @@ def censor_result(result: str): # copied from jieggii/witless
         result = result.replace(token, "*" * len(token))
 
     return result
+
+
+async def convert_to_package(toolkit: ToolKit, event: dict):
+    """
+    Обработать событие с сервера ВКонтакте в формат Package для внутренней работы фреймворка
+    """
+
+    try:
+        event_type = Events(event['type'])
+
+    except ValueError:
+        message = "Unsupported event"
+        exception = exceptions.UnsupportedEvent
+        toolkit_raise(toolkit, message, LogLevel, exception)
+
+    package_raw = {}
+    package_raw['type'] = event_type
+
+    if event_type is Events.MESSAGE_NEW:
+        package_raw.update(event['object']['message'])
+        package_raw['items'] = convert_command(censor_result(package_raw['text']))
+        package_raw['params'] = event['object']['client_info']
+
+    else:
+        package_raw.update(event['object'])
+
+    return Package(package_raw)
+
+
+def toolkit_raise(toolkit: ToolKit, message: str, log_level: LogLevel, exception: Exception):
+    """
+    Вызвать исключение с автоматической записью в лог
+    """
+
+    toolkit.log(message, log_level = log_level)
+    raise exception(message)
+
+
+def wrap_filter(check_function):
+    """
+    Обёртка для простых функций
+    """
+
+    def decorator(**kwargs):
+        wrapped_filter = Filter()
+        wrapped_filter.__dict__.update(kwargs)
+        wrapped_filter.check = check_function
+
+        return wrapped_filter
+
+    return decorator

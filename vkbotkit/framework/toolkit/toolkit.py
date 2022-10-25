@@ -9,8 +9,9 @@ from .assets import Assets
 from .replies import Replies
 from .uploader import Uploader
 from .logger import Logger
-from ..objects import data, exceptions, enums, keyboard, NAME_CASES
-from ..utils import Mention, dump_mention
+from ...objects import data, exceptions, enums, NAME_CASES
+from ...objects.mention import Mention
+from ...utils import dump_mention
 
 
 class ToolKit:
@@ -28,7 +29,7 @@ class ToolKit:
 
 
     def __repr__(self):
-        return "<vkbotkit.ToolKit>"
+        return "<vkbotkit.framework.toolkit>"
 
 
     def stop_polling(self) -> None:
@@ -71,14 +72,6 @@ class ToolKit:
         """
 
         return int(random.random() * 999999)
-
-
-    def create_keyboard(self, one_time: bool=False, inline: bool=False) -> keyboard.Keyboard:
-        """
-        Создать клавиатуру
-        """
-
-        return keyboard.Keyboard(one_time, inline)
 
 
     async def get_me(self, fields=None) -> data.Response:
@@ -192,24 +185,15 @@ class ToolKit:
 
 
     async def create_mention(self, mention_id: int,mention_key: typing.Optional[str] = None,
-        name_case: typing.Optional[str] = None):
+        name_case: typing.Optional[enums.NameCases] = enums.NameCases.NOM):
         """
         Создать упоминание
         """
 
-        if not mention_key:
+        if mention_key:
             if mention_id > 0:
-                if name_case:
-                    if hasattr(enums.NameCases, name_case):
-                        pass
-
-                    else:
-                        name_case = enums.NameCases.NOM
-
-                else:
-                    name_case = NAME_CASES[0]
-
-                response = await self.api.users.get(user_ids = mention_id, name_case = name_case)
+                response = await self.api.users.get(
+                    user_ids = mention_id, name_case = name_case.value)
                 mention_key = response[0].first_name
 
             else:

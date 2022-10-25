@@ -24,6 +24,7 @@ class Longpoll:
         """
         Обновить сервер
         """
+
         data = {'raw': True, 'group_id': group_id}
         response = await self._method('groups.getLongPollServer', data)
 
@@ -37,6 +38,7 @@ class Longpoll:
         """
         Запросить уведомления с сервера
         """
+
         values = {
             'act': 'a_check',
             'key': self.__key,
@@ -66,4 +68,4 @@ class Longpoll:
 
 
     def __repr__(self):
-        return "<vkbotkit.api.Longpoll>"
+        return "<vkbotkit.framework.longpoll>"

@@ -6,13 +6,15 @@ import asyncio
 import os
 from importlib.util import spec_from_file_location, module_from_spec
 
-from ..utils import map_folders, convert_command
-from ..objects import data, enums, exceptions, Library, PATH_SEPARATOR
+from ..utils import map_folders, toolkit_raise
+from ..objects import exceptions, Library, PATH_SEPARATOR
+from ..objects.enums import LogLevel
+from ..objects.data import Package
 
 
 class LibraryParser:
     """
-    Рабочий класс vkbotkit для работы с библиотеками
+    Обработчик библиотек, содержащихся в ./library
     """
 
     def __init__(self, libdir):
@@ -21,10 +23,10 @@ class LibraryParser:
 
 
     def __repr__(self) -> str:
-        return "<vkbotkit.features.CallbackLib>"
+        return "<vkbotkit.framework.library>"
 
 
-    def import_library(self, toolkit):
+    async def import_library(self, toolkit):
         """
         Импортировать все плагины из каталога library (либо иного другого)
         """
@@ -35,78 +37,57 @@ class LibraryParser:
         if not os.path.exists(self.__libdir):
             os.mkdir(self.__libdir)
 
-            toolkit.log("library doesn't exist",
-                log_level = enums.LogLevel.DEBUG)
+            message = "library doesn't exist"
+            exception = exceptions.LibraryExistionError
 
-            raise exceptions.LibraryExistionError("library doesn't exist")
+            toolkit_raise(toolkit, message, LogLevel.DEBUG, exception)
 
         if not os.path.isdir(self.__libdir):
-            toolkit.log("plugin library folder should be a directory, not a file",
-                log_level = enums.LogLevel.DEBUG)
+            message = "plugin library folder should be a directory, not a file"
+            exception = exceptions.LibraryTypeError
 
-            raise exceptions.LibraryTypeError(
-                "plugin library folder should be a directory, not a file")
+            toolkit_raise(toolkit, message, LogLevel.DEBUG, exception)
 
         for module_path in map_folders(self.__libdir):
             module_root = module_path[len(self.__libdir) + 1:]
             module_name = module_root.replace(PATH_SEPARATOR + "__init__.py", "")
+            module_path_name = module_path[module_path.rfind(PATH_SEPARATOR)+1:]
+            module_path_name = module_path_name.replace(".py", "", 1)
 
-            spec = spec_from_file_location(
-                module_path[module_path.rfind(PATH_SEPARATOR)+1:].replace(".py", "", 1),
-                module_path)
+            spec = spec_from_file_location(module_path_name,module_path)
             loaded_module = module_from_spec(spec)
             spec.loader.exec_module(loaded_module)
             self.import_module(loaded_module.Main)
 
-            toolkit.log(f"Importing plugin {module_name} succeed", enums.LogLevel.DEBUG)
+            toolkit.log(f"Importing plugin {module_name} succeed", LogLevel.DEBUG)
 
         self.handlers.sort(key = lambda h: h.filter.priority)
 
 
-    def import_module(self, lib):
+    async def import_module(self, lib):
         """
         Импортировать специфический модуль
         """
 
         lib_called = lib()
 
-        if isinstance(lib_called, Library):
-            self.handlers.extend(lib_called.handlers)
+        if not isinstance(lib_called, Library):
+            return
+
+        self.handlers.extend(lib_called.handlers)
 
 
-    async def parse(self, toolkit, package):
+    async def parse(self, toolkit, package: Package):
         """
         Обработать уведомление с помощью библиотек
         """
 
-        if not isinstance(package, data.Package):
-            package = await self._convert_event(package)
+        if not isinstance(package, Package):
+            message = "plugin library folder should be a directory, not a file"
+            exception = exceptions.LibraryTypeError
+
+            toolkit_raise(toolkit, message, LogLevel.DEBUG, exception)
 
         if not toolkit.replies.check(package):
             handler_tasks = list(map(lambda h: h.create_task(package, toolkit), self.handlers))
             await asyncio.gather(*handler_tasks)
-
-
-    async def _convert_event(self, event):
-        """
-        Обработать уведомление по типу
-        """
-
-        event_type_name = event['type'].upper()
-
-        if not hasattr(enums.Events, event_type_name):
-            raise Exception("Unsupported event")
-
-        event_type = getattr(enums.Events, event_type_name)
-
-        if event_type == enums.Events.MESSAGE_NEW:
-            package_raw = event['object']['message']
-            package_raw['params'] = event['object']['client_info']
-            package_raw['items'] = convert_command(package_raw['text'])
-
-        else:
-            package_raw = event['object']
-
-        package_raw['type'] = event_type
-
-        return data.Package(package_raw)

@@ -2,12 +2,6 @@
 Copyright 2022 kensoi
 """
 
-class MethodError(Exception):
-    """
-    Исключение, вызванное ошибкой в результате запроса на сервер ВКонтакте.
-    Проверьте параметры запроса
-    """
-
 class LibraryError(Exception):
     """
     Ошибка, связанная с библиотекой VKBotKit

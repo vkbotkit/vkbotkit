@@ -3,16 +3,15 @@ Copyright 2022 kensoi
 """
 
 import logging
-from ..objects import enums
+from ...objects.enums import LogLevel
 
 class Logger:
     """
     Логгер VKBotKit
     """
 
-    def __init__(
-        self, logger_name = None, log_level: enums.LogLevel = enums.LogLevel.INFO,
-        file_log = False, print_log = False):
+    def __init__(self, logger_name = None, log_level: LogLevel = LogLevel.INFO,
+            file_log = False, print_log = False):
         self.logger = logging.getLogger(logger_name)
         self.logger.setLevel(log_level.value)
         self.formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -30,7 +29,7 @@ class Logger:
             self.log_level = log_level
 
 
-    def log(self, message: str, log_level: enums.LogLevel = enums.LogLevel.INFO):
+    def log(self, message: str, log_level: LogLevel = LogLevel.INFO):
         """
         Log message
         """
@@ -45,4 +44,4 @@ class Logger:
 
 
     def __repr__(self) -> str:
-        return "<vkbotkit.features.Logger>"
+        return "<vkbotkit.framework.toolkit.logger>"

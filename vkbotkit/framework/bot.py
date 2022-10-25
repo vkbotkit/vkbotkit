@@ -13,8 +13,10 @@ from .api import GetAPI
 from .library import LibraryParser
 from .longpoll import Longpoll
 from .toolkit import ToolKit
-from ..objects import exceptions, data, enums
-from ..utils import PATH_SEPARATOR
+from ..objects import exceptions
+from ..objects.enums import LogLevel
+from ..objects.data import Response
+from ..utils import PATH_SEPARATOR, convert_to_package, toolkit_raise
 
 logger = logging.getLogger("VKBotKit")
 
@@ -44,10 +46,13 @@ class Bot:
         self.__event_loop = asyncio.get_event_loop()
 
 
+    def __repr__(self) -> str:
+        return "<vkbotkit.framework.bot>"
+
     @property
     def api_url(self):
         """
-        docstring patch
+        Прямой URL к API серверу ВКонтакте
         """
 
         return "https://api.vk.com/method/"
@@ -55,7 +60,7 @@ class Bot:
     @property
     def api(self):
         """
-        docstring patch
+        Обёртка вокруг Bot._method()
         """
 
         return GetAPI(self.session, self._method)
@@ -63,7 +68,7 @@ class Bot:
 
     async def _method(self, method="groups.getById", params = None):
         """
-        docstring patch
+        Скрытая функция для доступа к API
         """
 
         request_data = params or {}
@@ -89,13 +94,13 @@ class Bot:
                 return json
 
             else:
-                return data.Response(json)
+                return Response(json)
 
         elif isinstance(json, list):
             if is_raw:
                 return json
 
-            return [data.Response(i) for i in json]
+            return [Response(i) for i in json]
 
         else:
             return json
@@ -114,19 +119,25 @@ class Bot:
         """
         Начать обработку уведомлений с сервера ВКонтакте
         """
+
         if len(self.library.handlers) == 0:
             self.library.import_library(self.toolkit)
 
         if self.longpoll.is_polling:
-            self.toolkit.log("polling already started", log_level=enums.LogLevel.ERROR)
-            raise Exception("polling already started")
+            message = "polling already started"
+            toolkit_raise(self.toolkit, message, LogLevel.ERROR, exceptions.LongpollError)
 
         self.toolkit.is_polling = True
         group_info = await self.toolkit.get_me()
-        await self.longpoll.update_server(group_info.id)
+        self.group_id = group_info.id
+
+        await self.longpoll.update_server(self.group_id)
         self.toolkit.log(f"longpoll started at @{group_info.screen_name}")
 
         while self.toolkit.is_polling:
-            for event in await self.longpoll.check(group_info.id):
-                self.__event_loop.create_task(self.library.parse(self.toolkit, event))
+            for event in await self.longpoll.check(self.group_id):
+                package = await convert_to_package(self.toolkit, event)
+                parse_task = self.library.parse(self.toolkit, package)
+                self.__event_loop.create_task(parse_task)
+
         self.close()

@@ -16,7 +16,7 @@ class Replies:
 
 
     def __repr__(self) -> str:
-        return "<vkbotkit.framework.replies.Replies>"
+        return "<vkbotkit.framework.toolkit.replies>"
 
 
     def check(self, pkg):
@@ -51,23 +51,23 @@ class ReplyTask:
     Объект задачи для ожидания ответа
     """
 
-    def __init__(self, pkg):
-        self.__chat = pkg.peer_id
-        self.__from = pkg.from_id
+    def __init__(self, package):
+        self.peer_id = package.peer_id
+        self.from_id = package.from_id
         self.ready = False
         self.package = None
 
 
     def __repr__(self) -> str:
-        return "<vkbotkit.framework.replies.ReplyTask>"
+        return "<vkbotkit.framework.toolkit.replies.task>"
 
 
-    def check(self, pkg):
+    def check(self, package):
         """
         Проверка на ожидаемость данного уведомления.
         """
 
-        if self.__chat == pkg.peer_id and self.__from == pkg.from_id:
+        if self.peer_id == package.peer_id and self.from_id == package.from_id:
             self.ready = True
-            self.package = pkg
+            self.package = package
             return True

@@ -190,4 +190,4 @@ class Uploader:
 
 
     def __repr__(self):
-        return "<vkbotkit.api.Uploader>"
+        return "<vkbotkit.framework.uploader>"

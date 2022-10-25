@@ -223,7 +223,7 @@ class Keyboard:
         """
         Перевод на новую строку
         """
-        
+
         if len(self.lines) >= MAX_INLINE_LINES:
             if self.inline:
                 raise ValueError(f'Max {MAX_INLINE_LINES} lines for inline keyboard')
