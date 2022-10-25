@@ -43,7 +43,6 @@ class Bot:
         self.longpoll = Longpoll(self.session, self._method)
         self.toolkit = ToolKit(self.api, assets_path)
         self.library = LibraryParser(library_path)
-        self.__event_loop = asyncio.get_event_loop()
 
 
     def __repr__(self) -> str:
@@ -127,17 +126,19 @@ class Bot:
             message = "polling already started"
             toolkit_raise(self.toolkit, message, LogLevel.ERROR, exceptions.LongpollError)
 
-        self.toolkit.is_polling = True
+        loop = asyncio.get_event_loop()
         group_info = await self.toolkit.get_me()
-        self.group_id = group_info.id
+        self.toolkit.group_id = group_info.id
+        self.toolkit.screen_name = group_info.screen_name
+        self.toolkit.is_polling = True
 
-        await self.longpoll.update_server(self.group_id)
-        self.toolkit.log(f"longpoll started at @{group_info.screen_name}")
+        await self.longpoll.update_server(self.toolkit.group_id)
+        self.toolkit.log(f"longpoll started at @{self.toolkit.screen_name}")
 
         while self.toolkit.is_polling:
             for event in await self.longpoll.check(self.group_id):
                 package = await convert_to_package(self.toolkit, event)
                 parse_task = self.library.parse(self.toolkit, package)
-                self.__event_loop.create_task(parse_task)
+                loop.create_task(parse_task)
 
         self.close()

@@ -9,7 +9,7 @@ from .assets import Assets
 from .replies import Replies
 from .uploader import Uploader
 from .logger import Logger
-from ...objects import data, exceptions, enums, NAME_CASES
+from ...objects import data, exceptions, enums
 from ...objects.mention import Mention
 from ...utils import dump_mention
 
