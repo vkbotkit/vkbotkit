@@ -4,7 +4,7 @@ Copyright 2022 kensoi
 
 import typing
 from .filter import Filter
-from ..enums import Action as ActionEnum
+from ..enums import Action as ActionEnum, Events
 from ..package import Package
 
 
@@ -28,8 +28,9 @@ class Action(Filter):
         Фильтрация обработчиков на условие
         """
 
-        if self.check_action(package):
-            return package.action.type is self.action
+        if package.type is Events.MESSAGE_NEW:
+            if self.check_action(package):
+                return package.action.type is self.action
 
 
 class ChatPhotoUpdate(Action):

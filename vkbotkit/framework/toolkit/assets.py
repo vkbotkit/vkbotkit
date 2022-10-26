@@ -42,7 +42,7 @@ class Assets:
         elif 'file' in kwargs:
             kwargs['file'] = self.__path + kwargs['file']
 
-        encoding = kwargs.pop('encoding') if 'encoding' in kwargs else "utf-8"
+        encoding = kwargs.pop('encoding', "utf-8")
 
         return open(encoding = encoding, *args, **kwargs)
 

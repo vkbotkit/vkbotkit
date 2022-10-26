@@ -15,18 +15,18 @@ class IsThatText(Filter):
     Отправил ли пользователь точно такое же сообщение
     """
 
-    def __init__(self, message_to_compare: str) -> None:
+    def __init__(self, messages_to_compare: str) -> None:
         super().__init__()
-        self.message_to_compare = message_to_compare
+        self.messages_to_compare = messages_to_compare
 
 
-    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
 
         if package.type is Events.MESSAGE_NEW:
-            return package.text == self.message_to_compare
+            return package.text in self.messages_to_compare
 
 
 class IsForBot(Filter):
@@ -76,7 +76,7 @@ class IsCommand(Filter):
         self.priority = 5
 
 
-    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -95,10 +95,51 @@ class HasPayload(Filter):
     Есть ли в сообщении данные из словаря
     """
 
-    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
 
         if package.type is Events.MESSAGE_NEW:
             return hasattr(package, "payload")
+
+
+class IsUserChat(Filter):
+    """
+    Это диалог с пользователем?
+    """
+
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
+        if package.type is Events.MESSAGE_NEW:
+            return package.peer_id == package.from_id
+
+
+class IsConversation(Filter):
+    """
+    Это диалог с пользователем?
+    """
+
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
+        if package.type is Events.MESSAGE_NEW:
+            return package.peer_id != package.from_id
+
+
+class IsUserAdmin(Filter):
+    """
+    Проверка прав администратора у пользователя
+    """
+
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
+        if package.type is Events.MESSAGE_NEW:
+            response = await toolkit.is_admin(package.peer_id, package.from_id)
+            return package.peer_id != package.from_id and response
+
+
+class IsBotAdmin(Filter):
+    """
+    Проверка прав администратора у пользователя
+    """
+
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
+        if package.type is Events.MESSAGE_NEW:
+            return package.peer_id != package.from_id and await toolkit.is_admin(package.peer_id)

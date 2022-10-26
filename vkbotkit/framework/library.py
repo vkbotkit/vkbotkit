@@ -27,7 +27,7 @@ class LibraryParser:
         return "<vkbotkit.framework.library>"
 
 
-    async def import_library(self, toolkit: ToolKit, library_path: str) -> None:
+    def import_library(self, toolkit: ToolKit, library_path: str) -> None:
         """
         Импортировать все плагины из каталога library (либо иного другого)
         """
@@ -65,7 +65,7 @@ class LibraryParser:
         self.handlers.sort(key = lambda h: h.filter.priority)
 
 
-    async def import_module(self, main_lib: Library) -> None:
+    def import_module(self, main_lib: Library) -> None:
         """
         Импортировать специфический модуль (должен быть унаследован от
         Library и при передаче в функцию проинициализирован)
@@ -86,6 +86,6 @@ class LibraryParser:
 
             toolkit_raise(toolkit, message, LogLevel.DEBUG, exception)
 
-        if not toolkit.messages.replies.check(package):
+        if not toolkit.messages.check_for_waiting_reply(package):
             handler_tasks = map(lambda h: h.create_task(toolkit, package), self.handlers)
             await asyncio.gather(*handler_tasks)

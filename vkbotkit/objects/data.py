@@ -2,6 +2,17 @@
 Copyright 2022 kensoi
 """
 
+
+def convert_to_key(attr):
+    if isinstance(attr, dict):
+        return Key(attr)
+
+    if isinstance(attr, list):
+        return list(map(convert_to_key, attr))
+
+    return attr
+
+
 class Response:
     """
     Объект результата запроса к серверу ВКонтакте
@@ -10,31 +21,18 @@ class Response:
     raw: dict
 
     def __init__(self, entries):
-        self.__dict__.update(entries)
+        for key, value in entries.items():
+            self.__dict__[key] = convert_to_key(value)
+
         self.raw = entries
-
-        for i in self.__dict__:
-            setattr(self, i, self.__convert(getattr(self, i)))
-
-
-    def __convert(self, attr):
-        attr_type = type(attr)
-
-        if attr_type == dict:
-            return Key(attr)
-
-        if attr_type == list:
-            return list(map(self.__convert, attr))
-
-        return attr
 
 
     def __str__(self):
-        return str(self.raw)
+        return f'<vkbotkit.objects.data.Response {self.raw}>'
 
 
     def __repr__(self):
-        return '<vkbotkit.objects.data.Response>'
+        return f'<vkbotkit.objects.data.Response {self.raw}>'
 
 
 class Key(Response):
@@ -42,5 +40,10 @@ class Key(Response):
     Объект поля в результате
     """
 
+
     def __repr__(self):
-        return '<vkbotkit.objects.data.Key>'
+        return f'<vkbotkit.objects.data.Key {self.raw}>'
+
+
+    def __str__(self):
+        return f'<vkbotkit.objects.data.Key {self.raw}>'

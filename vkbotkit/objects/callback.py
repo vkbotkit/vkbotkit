@@ -21,7 +21,6 @@ class Wrapper():
         """
         Создать задачу для обработчика
         """
-
         if await self.filter.check(toolkit, package):
             return await self.callback(self.module, toolkit, package)
 

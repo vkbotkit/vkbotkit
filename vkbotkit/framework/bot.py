@@ -8,7 +8,7 @@ import typing
 import aiohttp
 from .library import LibraryParser
 from .longpoll import Longpoll
-from .toolkit import ToolKit
+from .toolkit.toolkit import ToolKit
 from ..objects import exceptions
 from ..objects.enums import LogLevel
 from ..objects.data import Response

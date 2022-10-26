@@ -25,7 +25,7 @@ class ToolKit:
         self.assets = Assets(self, assets_path)
         self.log = Log()
         self.messages = Messages(self.api)
-        self.uploader = Uploader(self.assets, self.api)
+        self.upload = Uploader(self.assets, self.api)
         self.is_polling = False
 
 

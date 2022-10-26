@@ -6,9 +6,21 @@ VKBotKit основан на наработках [Test Canary Bot](https://gith
 
 ## Структура фреймворка
 
-* `framework` - основной функционал фреймворка
-* `objects` - все типы данных, используемые при работе бота
-* `utils` - рабочие инструменты
+* `vkbotkit` - основной функционал фреймворка
+* `vkbotkit.objects` - вспомогательные объекты для работы модулей
+* `vkbotkit.objects.callback` - инструменты для регистрации обработчиков
+* `vkbotkit.objects.data` - обёртки вокруг dict
+* `vkbotkit.objects.enums` - вспомогательные списки
+* `vkbotkit.objects.exceptions` - исключения
+* `vkbotkit.objects.filters` - фильтры
+* `vkbotkit.objects.filters.actions` - фильтры для работы с action событиями
+* `vkbotkit.objects.filters.events` - фильтры для работы с событиями Longpoll
+* `vkbotkit.objects.filters.filter` - базовые фильтры
+* `vkbotkit.objects.filters.message` - фильтры для работы с сообщениями
+* `vkbotkit.objects.keyboard` - объекты клавиатуры
+* `vkbotkit.objects.mention` - объект упоминания
+* `vkbotkit.objects.package` - объект события и прикладные объекты для тайпинга
+* `vkbotkit.utils` - прикладные инструменты
 
 ## Полезные ссылки
 

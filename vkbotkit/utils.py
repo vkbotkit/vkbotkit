@@ -7,12 +7,12 @@ import random
 import re
 import typing
 
+
 from .objects import Mention, PATH_SEPARATOR
-from .objects.filters import Filter
 from .objects.enums import Action, Events, LogLevel
+from .objects.filters import Filter
 from .objects.package import Package
 from .objects import exceptions
-from .framework.toolkit import ToolKit
 
 
 def dump_mention(text: str) -> Mention:
@@ -102,7 +102,7 @@ def convert_command(text:str) -> list:
     text_filtered = filter(lambda item: item != "", re.split(r'(\[.*\])', text))
 
     for i in text_filtered:
-        if i[0] == "[" and i[-1] == "]":
+        if i[0] == "[" and i[-1] == "]" and "|" in i:
             items.append(dump_mention(i))
 
         else:
@@ -123,6 +123,17 @@ def censor_result(result: str):
         "all",
         "everyone",
     ]
+
+    for token in blacklisted_tokens:
+        result = result.replace(token, "*" * len(token))
+
+    return result
+
+def censor_links(result:str):
+    """
+    Цензор ссылок
+    """
+
     links = remove_duplicates(
         re.findall(r"[^ (){\}\[\]\'\";]+\.[^ (){\}\[\]\'\";]+", result)
     )
@@ -130,13 +141,10 @@ def censor_result(result: str):
     for link in links:
         result = result.replace(link, "[ссылка удалена]")
 
-    for token in blacklisted_tokens:
-        result = result.replace(token, "*" * len(token))
-
     return result
 
 
-async def convert_to_package(toolkit: ToolKit, event: dict):
+async def convert_to_package(toolkit, event: dict):
     """
     Обработать событие с сервера ВКонтакте в формат Package для внутренней работы фреймворка
     """
@@ -157,16 +165,18 @@ async def convert_to_package(toolkit: ToolKit, event: dict):
         package_raw['items'] = convert_command(censor_result(package_raw['text']))
         package_raw['params'] = event['object']['client_info']
 
-        if "action" in event['object']['message']:
-            package_raw['action']['type'] = Action(package_raw['action']['type'])
-
     else:
         package_raw.update(event['object'])
 
-    return Package(package_raw)
+    package = Package(package_raw)
+
+    if "action" in event['object']['message']:
+        package.action.type = Action(package.action.type)
+
+    return package
 
 
-def toolkit_raise(toolkit: ToolKit, message: str, log_level: LogLevel, exception: Exception):
+def toolkit_raise(toolkit, message: str, log_level: LogLevel, exception: Exception):
     """
     Вызвать исключение с автоматической записью в лог
     """
