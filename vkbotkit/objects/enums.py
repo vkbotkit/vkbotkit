@@ -4,6 +4,7 @@ Copyright 2022 kensoi
 
 from enum import Enum
 
+
 class Events(Enum):
     """
     Типы событий для Longpoll

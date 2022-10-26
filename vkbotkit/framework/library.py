@@ -6,10 +6,11 @@ import asyncio
 import os
 from importlib.util import spec_from_file_location, module_from_spec
 
+from .toolkit.toolkit import ToolKit
 from ..utils import map_folders, toolkit_raise
 from ..objects import exceptions, Library, PATH_SEPARATOR
 from ..objects.enums import LogLevel
-from ..objects.data import Package
+from ..objects.package import Package
 
 
 class LibraryParser:
@@ -17,26 +18,26 @@ class LibraryParser:
     Обработчик библиотек, содержащихся в ./library
     """
 
-    def __init__(self, libdir):
-        self.__libdir = libdir
+    def __init__(self) -> None:
         self.handlers = []
+        self.__libdir = None
 
 
     def __repr__(self) -> str:
         return "<vkbotkit.framework.library>"
 
 
-    async def import_library(self, toolkit):
+    async def import_library(self, toolkit: ToolKit, library_path: str) -> None:
         """
         Импортировать все плагины из каталога library (либо иного другого)
         """
+
+        self.__libdir = library_path
 
         if self.__libdir.startswith("."):
             self.__libdir = os.getcwd() + self.__libdir[1:]
 
         if not os.path.exists(self.__libdir):
-            os.mkdir(self.__libdir)
-
             message = "library doesn't exist"
             exception = exceptions.LibraryExistionError
 
@@ -57,27 +58,24 @@ class LibraryParser:
             spec = spec_from_file_location(module_path_name,module_path)
             loaded_module = module_from_spec(spec)
             spec.loader.exec_module(loaded_module)
-            self.import_module(loaded_module.Main)
+            self.import_module(loaded_module.Main())
 
             toolkit.log(f"Importing plugin {module_name} succeed", LogLevel.DEBUG)
 
         self.handlers.sort(key = lambda h: h.filter.priority)
 
 
-    async def import_module(self, lib):
+    async def import_module(self, main_lib: Library) -> None:
         """
-        Импортировать специфический модуль
+        Импортировать специфический модуль (должен быть унаследован от
+        Library и при передаче в функцию проинициализирован)
         """
 
-        lib_called = lib()
-
-        if not isinstance(lib_called, Library):
-            return
-
-        self.handlers.extend(lib_called.handlers)
+        if isinstance(main_lib, Library):
+            self.handlers.extend(main_lib.get_handlers())
 
 
-    async def parse(self, toolkit, package: Package):
+    async def parse(self, toolkit: ToolKit, package: Package) -> None:
         """
         Обработать уведомление с помощью библиотек
         """
@@ -88,6 +86,6 @@ class LibraryParser:
 
             toolkit_raise(toolkit, message, LogLevel.DEBUG, exception)
 
-        if not toolkit.replies.check(package):
-            handler_tasks = list(map(lambda h: h.create_task(package, toolkit), self.handlers))
+        if not toolkit.messages.replies.check(package):
+            handler_tasks = map(lambda h: h.create_task(toolkit, package), self.handlers)
             await asyncio.gather(*handler_tasks)

@@ -12,38 +12,39 @@ class Replies:
     """
 
     def __init__(self) -> None:
-        self.__wait_list = {}
+        self.__task_list = {}
 
 
     def __repr__(self) -> str:
         return "<vkbotkit.framework.toolkit.replies>"
 
 
-    def check(self, pkg):
+    def check(self, package):
         """
         Специальная функция для получения новых оповещений с беседы.
         """
 
-        for _, task_obj in self.__wait_list.items():
-            if task_obj.check(pkg):
-                return True
+        for message_task in self.__task_list.values():
+            if message_task.peer_id == package.peer_id:
+                if message_task.from_id == package.from_id:
+                    message_task.response = package
+                    return True
 
 
-    async def get(self, pkg):
+    async def get(self, package):
         """
         Специальная функция для получения новых оповещений с беседы.
         """
 
-        task_obj = ReplyTask(pkg)
-        task_id = f"${time.time()}_{pkg.peer_id}_{pkg.from_id}"
-        self.__wait_list[task_id] = task_obj
+        message_task = ReplyTask(package)
+        self.__task_list[str(message_task)] = message_task
 
-        while not task_obj.ready:
-            await asyncio.sleep(0.1)
+        while not message_task.response:
+            await asyncio.sleep(0.01)
 
-        self.__wait_list.pop(task_id, None)
+        self.__task_list.pop(str(message_task), None)
 
-        return task_obj.package
+        return message_task.response
 
 
 class ReplyTask:
@@ -52,22 +53,15 @@ class ReplyTask:
     """
 
     def __init__(self, package):
+        self.timestamp = time.time()
         self.peer_id = package.peer_id
         self.from_id = package.from_id
-        self.ready = False
-        self.package = None
+        self.response = None
 
 
     def __repr__(self) -> str:
         return "<vkbotkit.framework.toolkit.replies.task>"
 
 
-    def check(self, package):
-        """
-        Проверка на ожидаемость данного уведомления.
-        """
-
-        if self.peer_id == package.peer_id and self.from_id == package.from_id:
-            self.ready = True
-            self.package = package
-            return True
+    def __str__(self):
+        return f"${self.timestamp}_{self.peer_id}_{self.from_id}"

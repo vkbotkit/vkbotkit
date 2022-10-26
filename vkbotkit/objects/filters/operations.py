@@ -4,7 +4,7 @@ Copyright 2022 kensoi
 
 import typing
 from .filter import Filter
-from ..data import Package
+from ..package import Package
 
 
 class Negation(Filter):
@@ -27,7 +27,7 @@ class Negation(Filter):
             raise TypeError(f"{repr(filter_to_swap.__class__)} should be subclass of Filter")
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -59,7 +59,7 @@ class Equality(Filter):
             raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -91,7 +91,7 @@ class AndF(Filter):
             raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -123,7 +123,7 @@ class OrF(Filter):
             raise TypeError(f"{repr(second_filter.__class__)} should be subclass of Filter")
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """

@@ -10,10 +10,9 @@ class Uploader:
     Инструменты для работы с медиафайлами
     """
 
-    __slots__ = ('__toolkit', )
-
-    def __init__(self, toolkit):
-        self.__toolkit = toolkit
+    def __init__(self, assets, api):
+        self.assets = assets
+        self.api = api
 
 
     async def photo_messages(self, photos:list):
@@ -21,12 +20,12 @@ class Uploader:
         Загрузить фотографии
         """
 
-        response = await self.__toolkit.api.photos.getMessagesUploadServer(peer_id = 0)
-        response = await self.__toolkit.api.https.post(response.upload_url,
+        response = await self.api.photos.getMessagesUploadServer(peer_id = 0)
+        response = await self.api.https.post(response.upload_url,
             data = self.convert_asset(photos))
         response = await response.json(content_type = None)
 
-        image_data = await self.__toolkit.api.photos.saveMessagesPhoto(**response)
+        image_data = await self.api.photos.saveMessagesPhoto(**response)
 
         return list(map(lambda photo: f"photo{photo.owner_id}_{photo.id}", image_data))
 
@@ -36,13 +35,13 @@ class Uploader:
         Фотография виджета сообщества
         """
 
-        response = await self.__toolkit.api.appWidgets.getGroupImageUploadServer(
+        response = await self.api.appWidgets.getGroupImageUploadServer(
             image_type = image_type)
-        response = await self.__toolkit.api.https.post(response.upload_url,
+        response = await self.api.https.post(response.upload_url,
             data = self.convert_asset(photo))
         response = await response.json(content_type = None)
 
-        return await self.__toolkit.api.appWidgets.saveGroupImage(**response)
+        return await self.api.appWidgets.saveGroupImage(**response)
 
 
     async def photo_chat(self, photo, peer_id):
@@ -55,12 +54,12 @@ class Uploader:
 
         values = dict(chat_id = peer_id - 2000000000)
 
-        response = await self.__toolkit.api.photos.getChatUploadServer(**values)
-        response = await self.__toolkit.api.https.post(response.upload_url,
+        response = await self.api.photos.getChatUploadServer(**values)
+        response = await self.api.https.post(response.upload_url,
             data = self.convert_asset(photo))
         response = await response.json(content_type = None)
 
-        return await self.__toolkit.api.messages.setChatPhoto(file = response['response'])
+        return await self.api.messages.setChatPhoto(file = response['response'])
 
 
     async def document(self, document, title=None, tags=None,
@@ -71,8 +70,8 @@ class Uploader:
 
         values = dict(peer_id = peer_id, type = doc_type)
 
-        response = await self.__toolkit.api.docs.getMessagesUploadServer(**values)
-        response = await self.__toolkit.api.https.post(response.upload_url,
+        response = await self.api.docs.getMessagesUploadServer(**values)
+        response = await self.api.https.post(response.upload_url,
             data = self.convert_asset(document, sign = 'file'))
         response = await response.json(content_type = None)
 
@@ -82,7 +81,7 @@ class Uploader:
         if tags:
             response['tags'] = tags
 
-        doc_data = await self.__toolkit.api.docs.save(**response)
+        doc_data = await self.api.docs.save(**response)
         doc_obj = getattr(doc_data, doc_data.type)
 
         return f"{doc_data.type}{doc_obj.owner_id}_{doc_obj.id}"
@@ -103,10 +102,10 @@ class Uploader:
         """
 
         if file_type == 'photo':
-            method = self.__toolkit.api.stories.getPhotoUploadServer
+            method = self.api.stories.getPhotoUploadServer
 
         elif file_type == 'video':
-            method = self.__toolkit.api.stories.getVideoUploadServer
+            method = self.api.stories.getVideoUploadServer
 
         else:
             raise ValueError('type should be either photo or video')
@@ -132,11 +131,11 @@ class Uploader:
             values['link_url'] = link_url
 
         response = await method(**values)
-        response = await self.__toolkit.api.https.post(response.upload_url,
+        response = await self.api.https.post(response.upload_url,
             data = self.convert_asset(file, 'file' if file_type == "photo" else 'video_file'))
         response = await response.json(content_type = None)
 
-        story_data = await self.__toolkit.api.stories.save(
+        story_data = await self.api.stories.save(
             upload_results = response.response.upload_result)
 
         return f"story{story_data.owner_id}_{story_data.id}"
@@ -151,10 +150,10 @@ class Uploader:
             response = None
 
             if isinstance(files, str):
-                response = self.__toolkit.assets(files, 'rb', buffering = 0)
+                response = self.assets(files, 'rb', buffering = 0)
 
             elif isinstance(files, bytes):
-                response = self.__toolkit.assets(files)
+                response = self.assets(files)
 
             else:
                 response = files
@@ -171,7 +170,7 @@ class Uploader:
                     response = None
 
                     if isinstance(files[i], str):
-                        response = self.__toolkit.assets(files[i], 'rb', buffering = 0)
+                        response = self.assets(files[i], 'rb', buffering = 0)
 
                     elif isinstance(files[i], bytes):
                         response = BytesIO(files[i])
@@ -190,4 +189,4 @@ class Uploader:
 
 
     def __repr__(self):
-        return "<vkbotkit.framework.uploader>"
+        return "<vkbotkit.framework.toolkit.uploader>"

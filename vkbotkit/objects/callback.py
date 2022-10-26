@@ -17,13 +17,13 @@ class Wrapper():
         return "<vkbotkit.objects.callback.Wrapper>"
 
 
-    async def create_task(self, package, toolkit):
+    async def create_task(self, toolkit, package):
         """
         Создать задачу для обработчика
         """
 
-        if await self.filter.check(package):
-            return await self.callback(self.module, package, toolkit)
+        if await self.filter.check(toolkit, package):
+            return await self.callback(self.module, toolkit, package)
 
 
 class Library:
@@ -31,23 +31,26 @@ class Library:
     Объект плагина
     """
 
-    def __init__(self):
-        methods = set(dir(self)) - set(dir(object()))
-
-        methods_map = map(lambda i: getattr(self, i), methods)
-        methods_filtered = filter(callable, methods_map)
-        methods_inited = map(lambda i: i(), methods_filtered)
-        self.handlers = list(filter(lambda i: isinstance(i, Wrapper), methods_inited))
-
     def __repr__(self):
         return "<vkbotkit.objects.callback.Library>"
+
+
+    def get_handlers(self):
+        """
+        Получить список обработчиков
+        """
+
+        attr_name_set = set(dir(self)) - set(dir(Library()))
+        attr_map = map(lambda i: getattr(self, i), attr_name_set)
+        attr_inited = map(lambda i: i(), filter(callable, attr_map))
+        return list(filter(lambda i: isinstance(i, Wrapper), attr_inited))
 
 
 def callback(command_filter):
     """
     Прикрепить к обработчику фильтры
     """
-    
+
     def decorator(command_handler):
         def wrapper(self):
             return Wrapper(command_filter, command_handler, self)

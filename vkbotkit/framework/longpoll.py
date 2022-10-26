@@ -20,7 +20,7 @@ class Longpoll:
         self.__rps_delay = 0
 
 
-    async def update_server(self, group_id, update_ts: bool = True) -> None:
+    async def update_server(self, group_id: int, update_ts: bool = True) -> None:
         """
         Обновить сервер
         """
@@ -34,7 +34,7 @@ class Longpoll:
         self.__url = response['server']
 
 
-    async def check(self, group_id):
+    async def check(self, group_id: int) -> list:
         """
         Запросить уведомления с сервера
         """

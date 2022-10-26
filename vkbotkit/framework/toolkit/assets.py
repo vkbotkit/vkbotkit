@@ -3,14 +3,17 @@ Copyright 2022 kensoi
 """
 
 import os
-from ...utils import PATH_SEPARATOR
+
+from ...objects.enums import LogLevel
+from ...utils import PATH_SEPARATOR, toolkit_raise
+
 
 class Assets:
     """
     Рабочий класс для работы с медиафайлами из каталога ассетов.
     """
 
-    def __init__(self, sdk, assets = None):
+    def __init__(self, toolkit, assets = None):
         if not assets:
             assets = PATH_SEPARATOR.join([os.getcwd(), "assets", ""])
 
@@ -22,10 +25,10 @@ class Assets:
 
         if not os.path.exists(assets):
             os.mkdir(assets)
-            sdk.log(message = "Assets directory was made by framework")
+            toolkit.log(message = "Assets directory was made by framework")
 
         if not os.path.isdir(assets):
-            raise Exception("Assets directory should be a folder")
+            toolkit_raise(toolkit, "Assets directory should be a folder", LogLevel.DEBUG, Exception)
 
         self.__path = assets
 
@@ -43,9 +46,6 @@ class Assets:
 
         return open(encoding = encoding, *args, **kwargs)
 
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass
 
     def __repr__(self) -> str:
         return "<vkbotkit.framework.toolkit.assets>"

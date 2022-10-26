@@ -5,7 +5,7 @@ Copyright 2022 kensoi
 import typing
 
 from .filter import Filter
-from ..data import Package
+from ..package import Package
 from ..enums import Events
 from ..mention import Mention
 
@@ -20,7 +20,7 @@ class IsThatText(Filter):
         self.message_to_compare = message_to_compare
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -34,16 +34,15 @@ class IsForBot(Filter):
     Содержит ли сообщение упоминания
     """
 
-    def __init__(self, mentions, bot_id = None, group_id = None):
+    def __init__(self, mentions, group_id = None):
         super().__init__()
 
         self.mentions = set(map(lambda x: str(x).lower(), mentions))
-        self.bot_id = bot_id
         self.group_id = group_id
         self.priority = 5
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -60,10 +59,9 @@ class IsForBot(Filter):
             return
 
         if not self.group_id:
-            res = await package.toolkit.get_me()
-            self.bot_id = abs(res.id)
+            self.group_id = toolkit.group_id
 
-        return self.bot_id == mention.value
+        return self.group_id == mention.value
 
 
 class IsCommand(Filter):
@@ -78,7 +76,7 @@ class IsCommand(Filter):
         self.priority = 5
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -97,7 +95,7 @@ class HasPayload(Filter):
     Есть ли в сообщении данные из словаря
     """
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """

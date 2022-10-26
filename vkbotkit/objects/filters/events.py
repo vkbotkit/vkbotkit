@@ -4,7 +4,7 @@ Copyright 2022 kensoi
 
 import typing
 from .filter import Filter
-from ..data import Package
+from ..package import Package
 from ..enums import Events
 
 
@@ -28,7 +28,7 @@ class WhichEvent(Filter):
         return events == events_filtered
 
 
-    async def check(self, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """

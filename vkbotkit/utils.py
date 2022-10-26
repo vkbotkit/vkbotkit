@@ -3,13 +3,14 @@ Copyright 2022 kensoi
 """
 
 import os
+import random
 import re
 import typing
 
 from .objects import Mention, PATH_SEPARATOR
 from .objects.filters import Filter
-from .objects.enums import Events, LogLevel
-from .objects.data import Package
+from .objects.enums import Action, Events, LogLevel
+from .objects.package import Package
 from .objects import exceptions
 from .framework.toolkit import ToolKit
 
@@ -156,6 +157,9 @@ async def convert_to_package(toolkit: ToolKit, event: dict):
         package_raw['items'] = convert_command(censor_result(package_raw['text']))
         package_raw['params'] = event['object']['client_info']
 
+        if "action" in event['object']['message']:
+            package_raw['action']['type'] = Action(package_raw['action']['type'])
+
     else:
         package_raw.update(event['object'])
 
@@ -184,3 +188,11 @@ def wrap_filter(check_function):
         return wrapped_filter
 
     return decorator
+
+
+def gen_random() -> int:
+    """
+    Сгенерировать случайное число (для messages.send метода)
+    """
+
+    return int(random.random() * 999999)

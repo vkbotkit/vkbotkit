@@ -2,6 +2,7 @@
 Copyright 2022 kensoi
 """
 
+
 class Mention:
     """
     Объект упоминания

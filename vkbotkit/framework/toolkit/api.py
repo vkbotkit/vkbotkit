@@ -2,8 +2,6 @@
 Copyright 2022 kensoi
 """
 
-import six
-
 
 class GetAPI:
     """
@@ -26,7 +24,7 @@ class GetAPI:
 
 
     async def __call__(self, **kwargs):
-        for key, value in six.iteritems(kwargs):
+        for key, value in kwargs.items():
             if isinstance(value, (list, tuple)):
                 kwargs[key] = ','.join(str(x) for x in value)
 
@@ -34,4 +32,4 @@ class GetAPI:
 
 
     def __repr__(self):
-        return "<vkbotkit.framework.api.GetAPI>"
+        return "<vkbotkit.framework.api>"

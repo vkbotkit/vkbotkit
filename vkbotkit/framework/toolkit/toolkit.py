@@ -3,12 +3,11 @@ Copyright 2022 kensoi
 """
 
 import typing
-import random
-
+from .api import GetAPI
 from .assets import Assets
-from .replies import Replies
+from .messages import Messages
 from .uploader import Uploader
-from .logger import Logger
+from .logger import Log
 from ...objects import data, exceptions, enums
 from ...objects.mention import Mention
 from ...utils import dump_mention
@@ -19,17 +18,27 @@ class ToolKit:
     Инструментарий
     """
 
-    def __init__ (self, api, assets_path = None):
-        self.__logger = None
+    def __init__ (self, session, method, assets_path = None):
+        self._session = session
+        self._method = method
+
         self.assets = Assets(self, assets_path)
-        self.replies = Replies()
-        self.uploader = Uploader(self)
-        self.api = api
+        self.log = Log()
+        self.messages = Messages(self.api)
+        self.uploader = Uploader(self.assets, self.api)
         self.is_polling = False
 
 
     def __repr__(self):
         return "<vkbotkit.framework.toolkit>"
+
+    @property
+    def api(self):
+        """
+        Обёртка вокруг Bot._method()
+        """
+
+        return GetAPI(self._session, self._method)
 
 
     def stop_polling(self) -> None:
@@ -53,25 +62,7 @@ class ToolKit:
         Настроить логгер
         """
 
-        self.__logger = Logger("vkbotkit", log_level, log_to_file, log_to_console)
-
-
-    def log(self, message,
-        log_level: enums.LogLevel = enums.LogLevel.INFO) -> None:
-        """
-        Записать сообщение в логгер
-        """
-
-        if self.__logger:
-            self.__logger.log(message, log_level)
-
-
-    def gen_random(self) -> int:
-        """
-        Сгенерировать случайное число (для messages.send метода)
-        """
-
-        return int(random.random() * 999999)
+        self.log.configure("vkbotkit", log_level, log_to_file, log_to_console)
 
 
     async def get_me(self, fields=None) -> data.Response:
@@ -107,50 +98,13 @@ class ToolKit:
         return dump_mention(f"[{res.bot_type + str(res.id)}|{res.screen_name}]")
 
 
-    async def send_reply(
-        self, package: data.Package, message: typing.Optional[str]=None,
-        attachment: typing.Optional[str]=None,
-        delete_last:bool = False, **kwargs):
-        """
-        Упрощённая форма отправки ответа
-        """
-
-        if  'peer_id' not in kwargs:
-            kwargs['peer_id'] = package.peer_id
-
-        if  'random_id' not in kwargs:
-            kwargs['random_id'] = self.gen_random()
-
-        if  'message' not in kwargs and message:
-            kwargs['message'] = message
-
-        if  'attachment' not in kwargs and attachment:
-            kwargs['attachment'] = attachment
-
-        if delete_last:
-            await self.delete_message(package)
-
-        return await self.api.messages.send(**kwargs)
-
-
-    async def delete_message(self, package):
-        """
-        Удалить сообщение
-        """
-
-        return await self.api.messages.delete(
-            conversation_message_ids = package.conversation_message_id,
-            peer_id = package.peer_id, delete_for_all = 1)
-
-
     async def get_chat_members(self, peer_id):
         """
         Получить список участников в беседе
         """
 
-        chat_list = await self.api.messages.getConversationMembers(peer_id = peer_id)
-        members = list(map(lambda x: x.member_id, chat_list.items))
-        return members
+        conversation_members = await self.api.messages.getConversationMembers(peer_id = peer_id)
+        return list(map(lambda x: x.member_id, conversation_members.items))
 
 
     async def get_chat_admins(self, peer_id):
@@ -172,25 +126,28 @@ class ToolKit:
         Проверяет наличие прав у пользователя
         Если user_id пустой -- проверяется наличие прав у бота
         """
-        if not user_id:
-            try:
-                admin_list = await self.get_chat_admins(peer_id)
-                return True
 
-            except exceptions.MethodError:
-                return False
+        if user_id:
+            return user_id in await self.get_chat_admins(peer_id)
 
-        admin_list = await self.get_chat_admins(peer_id)
-        return user_id in admin_list
+        try:
+            await self.get_chat_admins(peer_id)
+
+        except exceptions.MethodError:
+            return False
+
+        else:
+            return True
 
 
-    async def create_mention(self, mention_id: int,mention_key: typing.Optional[str] = None,
+    async def create_mention(self, mention_id: int,
+        mention_key: typing.Optional[str] = None,
         name_case: typing.Optional[enums.NameCases] = enums.NameCases.NOM):
         """
         Создать упоминание
         """
 
-        if mention_key:
+        if not mention_key:
             if mention_id > 0:
                 response = await self.api.users.get(
                     user_ids = mention_id, name_case = name_case.value)

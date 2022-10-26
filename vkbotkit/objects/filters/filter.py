@@ -4,6 +4,7 @@ Copyright 2022 kensoi
 
 from abc import abstractmethod
 import typing
+from ..package import Package
 
 
 class Filter:
@@ -17,7 +18,7 @@ class Filter:
 
 
     @abstractmethod
-    async def check(self, package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Пример проверки условий
         """
