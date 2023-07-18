@@ -7,5 +7,5 @@ from .callback import Library, callback
 from .mention import Mention
 
 PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.2a8"
+VERSION = "1.3a1"
 NAME_CASES = ['nom', 'gen','dat', 'acc', 'ins', 'abl']

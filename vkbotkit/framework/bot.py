@@ -102,6 +102,7 @@ class Bot:
         """
 
         self.library_parser.import_library(self.toolkit, self.library_path)
+        self.library_parser.update_handlers()
 
         if self.longpoll.is_polling:
             message = "polling already started"
