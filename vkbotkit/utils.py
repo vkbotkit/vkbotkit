@@ -167,11 +167,12 @@ async def convert_to_package(toolkit, event: dict):
 
     else:
         package_raw.update(event['object'])
+        package_raw['type'] = event_type
 
     package = Package(package_raw)
-
-    if "action" in event['object']['message']:
-        package.action.type = Action(package.action.type)
+    if event_type is Events.MESSAGE_NEW:
+        if "action" in event['object']['message']:
+            package.action.type = Action(package.action.type)
 
     return package
 
