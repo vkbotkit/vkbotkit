@@ -24,7 +24,8 @@ def dump_mention(text: str) -> Mention:
         raise Exception(f"can't init mention from this text: \"{text}\" ")
 
     text = text[1:-1]
-    obj, key = text.split("|")
+
+    obj, key = text.split("|", 1)
 
     if obj.startswith('id'):
         value = 2
@@ -99,10 +100,10 @@ def convert_command(text:str) -> list:
     """
 
     items = []
-    text_filtered = filter(lambda item: item != "", re.split(r'(\[.*\])', text))
+    text_filtered = filter(lambda item: item != "", re.split('\[\]', text))
 
     for i in text_filtered:
-        if i[0] == "[" and i[-1] == "]" and "|" in i:
+        if i.count("|") >=1 and (i.startswith("id") or i.startswith("club") or i.startswith("public")):
             items.append(dump_mention(i))
 
         else:

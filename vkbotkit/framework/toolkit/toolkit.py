@@ -95,7 +95,7 @@ class ToolKit:
         """
 
         res = await self.get_me()
-        return dump_mention(f"[{res.bot_type + str(res.id)}|{res.screen_name}]")
+        return dump_mention(f"[{res.bot_type + str(res.id)}|@{res.screen_name}]")
 
 
     async def get_chat_members(self, peer_id):

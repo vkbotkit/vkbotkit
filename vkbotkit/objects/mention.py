@@ -14,9 +14,9 @@ class Mention:
     def __init__(self, page_id = None, page_key = None):
         self.value = page_id
 
-        page_type = "id" if page_id > 0 else "public"
-        self.key = page_key if page_key else f"@{page_type}{abs(page_id)}"
-        self.repr = f"[id{abs(page_id)}|{self.key}]"
+        page_type = "id" if int(page_id) > 0 else "public"
+        self.key = page_key if page_key else f"@{page_type}{abs(int(page_id))}"
+        self.repr = f"[id{abs(int(page_id))}|{self.key}]"
 
 
     def __int__(self):
