@@ -16,7 +16,7 @@ class Mention:
 
         page_type = "id" if int(page_id) > 0 else "public"
         self.key = page_key if page_key else f"@{page_type}{abs(int(page_id))}"
-        self.repr = f"[id{abs(int(page_id))}|{self.key}]"
+        self.repr = f"[{page_type}{abs(int(page_id))}|{self.key}]"
 
 
     def __int__(self):
