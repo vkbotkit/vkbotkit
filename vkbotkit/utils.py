@@ -25,21 +25,21 @@ def dump_mention(text: str) -> Mention:
 
     text = text[1:-1]
 
-    obj, key = text.split("|", 1)
+    id, key = text.split("|", 1)
+    user_type = -1 # 1 is a user, -1 is a community
 
-    if obj.startswith('id'):
-        value = 2
+    if id.startswith('id'):
+        user_type = 1
+        id = id.replace("id", "", 1)
 
-    elif obj.startswith('club'):
-        value = 4
-
-    elif obj.startswith('public'):
-        value = 6
+    elif id.startswith('club') or id.startswith('public'):
+        id = id.replace("club", "", 1)
+        id = id.replace("public", "", 1)
 
     else:
         raise TypeError("Invalid page id (should be club, public or id)")
 
-    return Mention(int(obj[value:]), key)
+    return Mention(int(id) * user_type, key)
 
 
 def convert_path(path: typing.Optional[str] = None, path_type: str = "") -> str:
@@ -93,23 +93,29 @@ def smart_split(text, split_char = " ") -> filter:
 
     return filter(lambda item: item != "", text.split(split_char))
 
+def get_mentions_list(text):
+    pattern = re.compile(r'\[.*?\]')
+    return [dump_mention(i) for i in pattern.findall(text)]
+
 
 def convert_command(text:str) -> list:
     """
     Конвертация текста в список ключевых слов
     """
 
-    items = []
-    text_filtered = filter(lambda item: item != "", re.split('\[\]', text))
+    text_filtered = text.replace("[club", "[public", -1)
+    mention_list = get_mentions_list(text)
 
-    for i in text_filtered:
-        if i.count("|") >=1 and (i.startswith("id") or i.startswith("club") or i.startswith("public")):
-            items.append(dump_mention(i))
+    for item in mention_list:
+        text_filtered = text_filtered.replace(repr(item), "all", 1)
+    
+    text_splitted = text_filtered.split(" ")
 
-        else:
-            items.extend(smart_split(i))
-
-    return items
+    for index in range(len(text_splitted)):
+        if text_splitted[index] == "all":
+            text_splitted[index] = mention_list.pop(0)
+    
+    return text_splitted
 
 
 def censor_result(result: str):
@@ -165,6 +171,7 @@ async def convert_to_package(toolkit, event: dict):
         package_raw.update(event['object']['message'])
         package_raw['items'] = convert_command(censor_result(package_raw['text']))
         package_raw['params'] = event['object']['client_info']
+        package_raw['mentions'] = get_mentions_list(package_raw['text'])
 
     else:
         package_raw.update(event['object'])
