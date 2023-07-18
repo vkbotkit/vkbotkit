@@ -12,20 +12,20 @@ class Mention:
 
 
     def __init__(self, page_id = None, page_key = None):
-        self.value = page_id
+        self.value = int(page_id)
 
-        page_type = "id" if int(page_id) > 0 else "public"
-        self.key = page_key if page_key else f"@{page_type}{abs(int(page_id))}"
-        self.repr = f"[{page_type}{abs(int(page_id))}|{self.key}]"
+        page_type = "id" if self.value > 0 else "public"
+        self.key = page_key if page_key else f"@{page_type}{abs(self.value)}"
+        self.repr = f"[{page_type}{abs(self.value)}|{self.key}]"
 
 
     def __int__(self):
-        return self.value
+        return self.value # ID группы, если < 0 или ID пользователя, если > 1
 
 
     def __str__(self):
-        return self.key
+        return self.key  # Название упоминания
 
 
     def __repr__(self):
-        return self.repr
+        return self.repr # [{тип страницы}{ID страницы}|{название упоминания}]
