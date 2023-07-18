@@ -148,7 +148,7 @@ class ToolKit:
         """
 
         if not mention_key:
-            if mention_id > 0:
+            if int(mention_id) > 0:
                 response = await self.api.users.get(
                     user_ids = mention_id, name_case = name_case.value)
                 mention_key = response[0].first_name
