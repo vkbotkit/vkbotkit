@@ -69,14 +69,15 @@ class IsCommand(Filter):
     Какая это команда
     """
 
-    def __init__(self, commands):
+    def __init__(self, commands, only_with_args=False, only_without_args=False):
         super().__init__()
 
         self.commands = set(map(lambda x: str(x).lower(), commands))
-        self.priority = 5
+        self.priority = 5 
+        self.only_with_args = only_with_args
+        self.only_without_args = only_without_args
 
-
-    async def check(self, _, package: Package) -> typing.Optional[bool]:
+    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -84,10 +85,25 @@ class IsCommand(Filter):
         if package.type is not Events.MESSAGE_NEW:
             return
 
-        if len(package.items) < 2:
+        elif len(package.items) < 2:
+            return
+        
+        elif len(package.items) == 2:
+            if self.only_with_args:
+                return
+         
+        elif len(package.items) > 2:
+            if self.only_without_args:
+                return
+        
+        elif type(package.items[0]) == Mention:
+            if int(package.items[0]) != int(await toolkit.get_my_mention()):
+                return
+        
+        elif package.items[0].lower() not in toolkit.bot_mentions:
             return
 
-        return package.items[1] in self.commands
+        return package.items[1].lower() in self.commands
 
 
 class HasPayload(Filter):

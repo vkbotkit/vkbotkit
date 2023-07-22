@@ -1,5 +1,5 @@
 """
-Copyright 2022 kensoi
+Copyright 2023 kensoi
 """
 
 import os
@@ -160,18 +160,18 @@ async def convert_to_package(toolkit, event: dict):
         event_type = Events(event['type'])
 
     except ValueError:
-        message = "Unsupported event"
+        message = "Unsupported event ({event_type})".format(event_type=event['type'])
         exception = exceptions.UnsupportedEvent
-        toolkit_raise(toolkit, message, LogLevel, exception)
+        toolkit_raise(toolkit, message, LogLevel.ERROR, exception)
 
     package_raw = {}
     package_raw['type'] = event_type
 
     if event_type is Events.MESSAGE_NEW:
         package_raw.update(event['object']['message'])
-        package_raw['items'] = convert_command(censor_result(package_raw['text']))
+        package_raw['items'] = convert_command(censor_result(package_raw.get("text", "")))
         package_raw['params'] = event['object']['client_info']
-        package_raw['mentions'] = get_mentions_list(package_raw['text'])
+        package_raw['mentions'] = get_mentions_list(package_raw.get("text", ""))
 
     else:
         package_raw.update(event['object'])

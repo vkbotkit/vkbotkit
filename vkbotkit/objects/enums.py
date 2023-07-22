@@ -18,6 +18,8 @@ class Events(Enum):
     MESSAGE_REPLY = 'message_reply'
     MESSAGE_DENY = 'message_deny'
     MESSAGE_EVENT = 'message_event'
+    MESSAGE_READ = 'message_read'
+    MESSAGE_REACTION_EVENT = 'message_reaction_event'
 
     PHOTO_NEW = 'photo_new'
     PHOTO_COMMENT_NEW = 'photo_comment_new'

@@ -1,5 +1,5 @@
 """
-Copyright 2022 kensoi
+Copyright 2023 kensoi
 """
 
 import typing
@@ -21,12 +21,14 @@ class ToolKit:
     def __init__ (self, session, method, assets_path = None):
         self._session = session
         self._method = method
+        self.__bot_mention=None
 
         self.assets = Assets(self, assets_path)
         self.log = Log()
         self.messages = Messages(self.api)
         self.upload = Uploader(self.assets, self.api)
         self.is_polling = False
+        self.bot_mentions = []
 
 
     def __repr__(self):
@@ -93,10 +95,19 @@ class ToolKit:
         """
         Получить форму упоминания сообщества, в котором работает ваш бот
         """
+        if not self.__bot_mention:
+            response = await self.get_me()
+            
+            if response.bot_type == "id":
+                bot_id = response.id
 
-        res = await self.get_me()
-        return dump_mention(f"[{res.bot_type + str(res.id)}|@{res.screen_name}]")
+            else:
+                bot_id = -response.id
 
+            self.__bot_mention = Mention(bot_id, "@{screen_name}".format(screen_name=response.screen_name))
+        
+        return self.__bot_mention
+            
 
     async def get_chat_members(self, peer_id):
         """
