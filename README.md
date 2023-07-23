@@ -24,5 +24,5 @@ VKBotKit основан на наработках [Test Canary Bot](https://gith
 
 ## Полезные ссылки
 
-* [vkbotkit/template](https://github.com/vkbotkit/template/tree/v1.2)
-* [vkbotkit/examples](https://github.com/vkbotkit/examples/tree/v1.2)
+* [vkbotkit/template](https://github.com/vkbotkit/template/tree/v1.3)
+* [vkbotkit/examples](https://github.com/vkbotkit/examples/tree/v1.3)
