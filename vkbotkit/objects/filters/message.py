@@ -10,6 +10,8 @@ from ..enums import Events
 from ..mention import Mention
 
 
+init = lambda definition: definition()
+
 class IsThatText(Filter):
     """
     Отправил ли пользователь точно такое же сообщение
@@ -29,18 +31,11 @@ class IsThatText(Filter):
             return package.text in self.messages_to_compare
 
 
-class IsForBot(Filter):
+@init
+class HasBotMentions(Filter):
     """
     Содержит ли сообщение упоминания
     """
-
-    def __init__(self, mentions, group_id = None):
-        super().__init__()
-
-        self.mentions = set(map(lambda x: str(x).lower(), mentions))
-        self.group_id = group_id
-        self.priority = 5
-
 
     async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         """
@@ -49,19 +44,14 @@ class IsForBot(Filter):
 
         if package.type is not Events.MESSAGE_NEW:
             return
-
-        mention = package.items[0]
-
-        if isinstance(mention, str) and mention.lower() in self.mentions:
+        
+        if set(toolkit.bot_mentions) & set(package.items) != set():
             return True
-
-        if not isinstance(mention, Mention):
-            return
-
-        if not self.group_id:
-            self.group_id = toolkit.group_id
-
-        return self.group_id == mention.value
+        
+        if int(await toolkit.get_my_mention()) in list(map(int, package.mentions)):
+            return True
+        
+        return False
 
 
 class IsCommand(Filter):
@@ -106,6 +96,7 @@ class IsCommand(Filter):
         return package.items[1].lower() in self.commands
 
 
+@init
 class HasPayload(Filter):
     """
     Есть ли в сообщении данные из словаря
@@ -120,6 +111,7 @@ class HasPayload(Filter):
             return hasattr(package, "payload")
 
 
+@init
 class IsUserChat(Filter):
     """
     Это диалог с пользователем?
@@ -130,6 +122,7 @@ class IsUserChat(Filter):
             return package.peer_id == package.from_id
 
 
+@init
 class IsConversation(Filter):
     """
     Это диалог с пользователем?
@@ -140,6 +133,7 @@ class IsConversation(Filter):
             return package.peer_id != package.from_id
 
 
+@init
 class IsUserAdmin(Filter):
     """
     Проверка прав администратора у пользователя
@@ -151,6 +145,7 @@ class IsUserAdmin(Filter):
             return package.peer_id != package.from_id and response
 
 
+@init
 class IsBotAdmin(Filter):
     """
     Проверка прав администратора у пользователя
@@ -159,3 +154,16 @@ class IsBotAdmin(Filter):
     async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
         if package.type is Events.MESSAGE_NEW:
             return package.peer_id != package.from_id and await toolkit.is_admin(package.peer_id)
+
+
+@init
+class GotReaction(Filter):
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
+        if package.type is Events.MESSAGE_REACTION_EVENT:
+            return "reaction_id" in package.raw
+        
+@init
+class LostReaction(Filter):
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
+        if package.type is Events.MESSAGE_REACTION_EVENT:
+            return "reaction_id" not in package.raw

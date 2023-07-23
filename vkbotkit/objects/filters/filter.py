@@ -48,7 +48,7 @@ class Filter:
         return f"<{self.__class__.__name__} filter>"
 
 
-class Negation(Filter):
+class Not(Filter):
     """
     Логическое отрицание для фильтров
     """

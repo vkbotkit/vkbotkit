@@ -7,6 +7,7 @@ from .filter import Filter
 from ..enums import Action as ActionEnum, Events
 from ..package import Package
 
+init = lambda definition: definition()
 
 class Action(Filter):
     """
@@ -23,7 +24,7 @@ class Action(Filter):
         return hasattr(package, "action")
 
 
-    async def check(self, toolkit, package: Package) -> typing.Optional[bool]:
+    async def check(self, _, package: Package) -> typing.Optional[bool]:
         """
         Фильтрация обработчиков на условие
         """
@@ -32,7 +33,7 @@ class Action(Filter):
             if self.check_action(package):
                 return package.action.type is self.action
 
-
+@init
 class ChatPhotoUpdate(Action):
     """
     Обновление аватарки чата
@@ -41,6 +42,7 @@ class ChatPhotoUpdate(Action):
     action = ActionEnum.CHAT_PHOTO_UPDATE
 
 
+@init
 class ChatPhotoRemove(Action):
     """
     Аватарка удалена
@@ -49,6 +51,7 @@ class ChatPhotoRemove(Action):
     action = ActionEnum.CHAT_PHOTO_REMOVE
 
 
+@init
 class ChatCreate(Action):
     """
     Создан чат
@@ -57,6 +60,7 @@ class ChatCreate(Action):
     action = ActionEnum.CHAT_CREATE
 
 
+@init
 class ChatTitleUpdate(Action):
     """
     Изменено название чата
@@ -65,6 +69,7 @@ class ChatTitleUpdate(Action):
     action = ActionEnum.CHAT_TITLE_UPDATE
 
 
+@init
 class ChatInviteUser(Action):
     """
     Приглашён пользователь
@@ -73,6 +78,7 @@ class ChatInviteUser(Action):
     action = ActionEnum.CHAT_INVITE_USER
 
 
+@init
 class ChatKickUser(Action):
     """
     Исключён пользователь
@@ -81,6 +87,7 @@ class ChatKickUser(Action):
     action = ActionEnum.CHAT_KICK_USER
 
 
+@init
 class ChatPinMessage(Action):
     """
     Прикреплено сообщение
@@ -89,6 +96,7 @@ class ChatPinMessage(Action):
     action = ActionEnum.CHAT_PIN_MESSAGE
 
 
+@init
 class ChatUnpinMessage(Action):
     """
     Откреплено сообщение
@@ -97,6 +105,7 @@ class ChatUnpinMessage(Action):
     action = ActionEnum.CHAT_UNPIN_MESSAGE
 
 
+@init
 class ChatInviteUserByLink(Action):
     """
     Пользователь вступил в чат с помощью ссылки
