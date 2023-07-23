@@ -85,7 +85,7 @@ class IsCommand(Filter):
         if package.type is not Events.MESSAGE_NEW:
             return
 
-        elif len(package.items) < 2:
+        if len(package.items) < 2:
             return
         
         elif len(package.items) == 2:
@@ -96,7 +96,7 @@ class IsCommand(Filter):
             if self.only_without_args:
                 return
         
-        elif type(package.items[0]) == Mention:
+        if type(package.items[0]) == Mention:
             if int(package.items[0]) != int(await toolkit.get_my_mention()):
                 return
         
