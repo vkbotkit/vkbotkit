@@ -4,10 +4,15 @@ Copyright 2022 kensoi
 
 import asyncio
 import os
-from importlib.util import spec_from_file_location, module_from_spec
+import importlib
 
 from .toolkit.toolkit import ToolKit
-from ..utils import map_folders, toolkit_raise
+from ..utils import (
+    parse_path_for_plugins, 
+    parse_plugin_for_libs, 
+    toolkit_raise, 
+    get_library_handlers
+)
 from ..objects import exceptions, Library, PATH_SEPARATOR
 from ..objects.enums import LogLevel
 from ..objects.package import Package
@@ -34,77 +39,88 @@ class LibraryParser:
         return "<vkbotkit.framework.library>"
 
 
-    def import_library(self, toolkit: ToolKit, library_path: str) -> None:
+    def import_library(self, toolkit: ToolKit) -> None:
         """
         Импортировать все плагины из каталога library (либо иного другого)
         """
 
-        self.__libdir = library_path
-        self.__modify_watcher.paths.append(self.__libdir)
+        self.__library_dir = os.getcwd() + PATH_SEPARATOR + "library"
+        self.__modify_watcher.paths.append(self.__library_dir)
         self.toolkit = toolkit
 
-        if self.__libdir.startswith("."):
-            self.__libdir = os.getcwd() + self.__libdir[1:]
-
-        if not os.path.exists(self.__libdir):
+        if not os.path.exists(self.__library_dir):
             message = "library doesn't exist"
             exception = exceptions.LibraryExistionError
 
             toolkit_raise(toolkit, message, LogLevel.DEBUG, exception)
 
-        if not os.path.isdir(self.__libdir):
+        if not os.path.isdir(self.__library_dir):
             message = "plugin library folder should be a directory, not a file"
             exception = exceptions.LibraryTypeError
 
             toolkit_raise(toolkit, message, LogLevel.DEBUG, exception)
 
-        for module_path in map_folders(self.__libdir):
-            module_root = module_path[len(self.__libdir) + 1:]
-            module_name = module_root.replace(PATH_SEPARATOR + "__init__.py", "")
-            module_path_name = module_path[module_path.rfind(PATH_SEPARATOR)+1:]
-            module_path_name = module_path_name.replace(".py", "", 1)
+        for module_name in parse_path_for_plugins(self.__library_dir):
+            module_import_path = "library.{}".format(module_name)
+            module = importlib.import_module(module_import_path)
 
-            spec = spec_from_file_location(module_path_name, module_path)
-            loaded_module = module_from_spec(spec)
-            spec.loader.exec_module(loaded_module)
-            self.__modify_watcher.add_watch(loaded_module, module_path_name)
-            self.import_module(loaded_module)
+            plugin_lib_count = 0
 
-            toolkit.log(f"Importing plugin {module_name} succeed", LogLevel.DEBUG)
+            for library in parse_plugin_for_libs(module):
+                self.init_library(library, module_import_path)
+                plugin_lib_count += 1
+            
+            self.__modify_watcher.add_watch(module, module_import_path)
+
+            toolkit.log("{plugin_name}: import of {plugin_lib_count} libs succeed".format(
+                plugin_name=module_name,
+                plugin_lib_count=plugin_lib_count
+            ), LogLevel.DEBUG)
 
 
-    def import_module(self, loaded_module) -> None:
+    def init_library(self, library_constructor:Library, library_name: str) -> None:
         """
         Импортировать специфический модуль (должен быть унаследован от
         Library и при передаче в функцию проинициализирован)
         """
-        main_lib:Library = loaded_module.Main()
+        library = library_constructor()
 
-        if isinstance(main_lib, Library):
-            self.modules[loaded_module.__name__] = main_lib
+        if not isinstance(library, Library):
+            raise TypeError("Library should be Library :)")
+        
+        self.modules[library_name] = library
 
     def watcher_action(self, action, item):
-        module_path_name = item['module_path_name']
         module_path = item['module_path']
         
         self.toolkit.log(f"action: {action}, path: {module_path}", log_level=LogLevel.DEBUG)
 
         if action == EVENT_TYPE_MODIFIED:
-            spec = spec_from_file_location(module_path_name, module_path)
-            loaded_module = module_from_spec(spec)
-            spec.loader.exec_module(loaded_module)
+            module = item["module"]
+            module_name = item["module_path_name"]
+            importlib.reload(module)
 
-            self.import_module(loaded_module)
+            plugin_lib_count = 0
+
+            for library in parse_plugin_for_libs(module):
+                self.init_library(library, module_name)
+                plugin_lib_count += 1
+
             self.update_handlers()
+
+            self.toolkit.log("{plugin_name}: {plugin_lib_count} libs reloaded".format(
+                plugin_name=module_name,
+                plugin_lib_count=plugin_lib_count
+            ), LogLevel.DEBUG)
 
     def update_handlers(self):
         self.handlers = []
 
         for library in self.modules.values():
-            self.handlers.extend(library.get_handlers())
+            library_handler_list = get_library_handlers(library)
+            self.handlers.extend(library_handler_list)
 
         self.handlers.sort(key = lambda h: h.filter.priority)
-
 
     async def parse(self, toolkit: ToolKit, package: Package) -> None:
         """

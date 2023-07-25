@@ -2,17 +2,20 @@
 Copyright 2023 kensoi
 """
 
+import inspect
 import os
 import random
 import re
 import typing
-
 
 from .objects import Mention, PATH_SEPARATOR
 from .objects.enums import Action, Events, LogLevel
 from .objects.filters import Filter
 from .objects.package import Package
 from .objects import exceptions
+    
+from .objects.library import Library
+from .objects.callback.wrapper import Wrapper
 
 
 def dump_mention(text: str) -> Mention:
@@ -55,28 +58,35 @@ def convert_path(path: typing.Optional[str] = None, path_type: str = "") -> str:
     return PATH_SEPARATOR.join([path_c, path_type])
 
 
-def map_folders(libdir) -> list:
+def parse_path_for_plugins(library_path) -> list:
     """
     Фильтрация + конвертация плагинов в библиотеке бота
     """
 
-    files_list = os.listdir(libdir)
+    for module_name in os.listdir(library_path):
+        module_path = PATH_SEPARATOR.join([library_path, module_name])
+        
+        if os.path.isfile(module_path):
+            if module_name.endswith(".py"):
+                yield module_name[:-3]
 
-    def name_filter(name):
-        obj_path = PATH_SEPARATOR.join([libdir, name])
+        if os.path.isdir(module_path):
+            if "__init__.py" in os.listdir(module_path):
+                yield module_name
 
-        if os.path.isfile(obj_path):
-            if name.endswith(".py"):
-                return obj_path
 
-        elif "__init__.py" in os.listdir(obj_path):
-            return PATH_SEPARATOR.join([obj_path, "__init__.py"])
+def parse_plugin_for_libs(module):
+    for _, library in inspect.getmembers(module):
+        if not inspect.isclass(library):
+            continue
 
-    filtered_names = map(name_filter, files_list)
-    removed_empty_items = filter(lambda x: x is not None, filtered_names)
+        if not issubclass(library, Library):
+            continue
 
-    return list(removed_empty_items)
-
+        if library == Library:
+            continue
+        
+        yield library
 
 def remove_duplicates(array):
     """
@@ -215,3 +225,35 @@ def gen_random() -> int:
     """
 
     return int(random.random() * 999999)
+
+    
+def get_callable_list(object, name_list):
+    for key in name_list:
+        item = getattr(object, key)
+
+        if callable(item):
+            yield item
+
+def get_type_list(item_list, needed_type):
+    for item in item_list:
+        try:
+            inited_callback = item()
+
+            if isinstance(inited_callback, needed_type):
+                yield inited_callback
+            
+        except Exception as e:
+            pass
+
+def get_library_handlers(library):
+    """
+    Получить список обработчиков
+    """
+
+    if not isinstance(library, Library):
+        raise TypeError("library should be instance of vkbotkit.objects.callback.Library")
+    
+
+    attribute_name_list = set(dir(library)) - set(dir(Library()))
+    callable_list = list(get_callable_list(library, attribute_name_list))
+    return list(get_type_list(callable_list, Wrapper))

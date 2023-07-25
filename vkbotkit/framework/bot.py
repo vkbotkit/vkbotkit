@@ -6,6 +6,8 @@ import asyncio
 import os
 import typing
 import aiohttp
+from aiohttp.client_exceptions import *
+
 from .library import LibraryParser
 from .longpoll import Longpoll
 from .toolkit.toolkit import ToolKit
@@ -21,15 +23,13 @@ class Bot:
     """
 
     def __init__(self, access_token, group_id, api_version = "5.531",
-            assets_path: typing.Optional[str] = None, library_path: typing.Optional[str] = None,
             trust_env: bool = False) -> None:
 
         self.access_token = access_token
         self.group_id = group_id
         self.api_version = api_version
 
-        self.assets_path = assets_path or os.getcwd() + PATH_SEPARATOR + "assets"
-        self.library_path = library_path or os.getcwd() + PATH_SEPARATOR + "library"
+        self.assets_path = os.getcwd() + PATH_SEPARATOR + "assets"
 
         self._session = aiohttp.ClientSession(trust_env=trust_env)
         self.longpoll = Longpoll(self._session, self._method)
@@ -101,26 +101,35 @@ class Bot:
         Начать обработку уведомлений с сервера ВКонтакте
         """
 
-        self.library_parser.import_library(self.toolkit, self.library_path)
-        self.library_parser.update_handlers()
+        try:
+            loop = asyncio.get_event_loop()
 
-        if self.longpoll.is_polling:
-            message = "polling already started"
-            toolkit_raise(self.toolkit, message, LogLevel.ERROR, exceptions.LongpollError)
+            self.library_parser.import_library(self.toolkit)
+            self.library_parser.update_handlers()
 
-        loop = asyncio.get_event_loop()
-        group_info = await self.toolkit.get_me()
-        self.toolkit.group_id = group_info.id
-        self.toolkit.screen_name = group_info.screen_name
-        self.toolkit.is_polling = True
+            if self.longpoll.is_polling:
+                message = "polling already started"
+                toolkit_raise(self.toolkit, message, LogLevel.ERROR, exceptions.LongpollError)
 
-        await self.longpoll.update_server(self.toolkit.group_id)
-        self.toolkit.log(f"longpoll started at @{self.toolkit.screen_name}")
+            bot_data = await self.toolkit.get_me()
 
-        while self.toolkit.is_polling:
-            for event in await self.longpoll.check(self.group_id):
-                package = await convert_to_package(self.toolkit, event)
-                parse_task = self.library_parser.parse(self.toolkit, package)
-                loop.create_task(parse_task)
+            self.toolkit.group_id = bot_data.id
+            self.toolkit.bot_id = bot_data.id
+            self.toolkit.screen_name = bot_data.screen_name
+            self.toolkit.is_polling = True
 
-        await self.close()
+            await self.longpoll.update_server(self.toolkit.group_id)
+            self.toolkit.log(f"@{self.toolkit.screen_name}: started polling.")
+
+            while self.toolkit.is_polling:
+                for event in await self.longpoll.check(self.group_id):
+                    package = await convert_to_package(self.toolkit, event)
+                    parse_task = self.library_parser.parse(self.toolkit, package)
+                    loop.create_task(parse_task)
+
+        except ClientConnectorError as e:
+            self.toolkit.log(f"ClientConnectorError: {e}", log_level=LogLevel.ERROR)
+
+        finally:
+            self.toolkit.log(f"@{self.toolkit.screen_name}: stopped polling.")
+            await self.close()
