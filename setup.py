@@ -10,7 +10,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="vkbotkit",
-    version="1.3а4",
+    version="1.3a5",
     author="kensoi",
     author_email="kensoidev@gmail.com",
     description=(

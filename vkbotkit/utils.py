@@ -44,20 +44,6 @@ def dump_mention(text: str) -> Mention:
 
     return Mention(int(id) * user_type, key)
 
-
-def convert_path(path: typing.Optional[str] = None, path_type: str = "") -> str:
-    """
-    Получить местоположение папки <path_type>
-    """
-
-    path_c = os.getcwd()
-
-    if path:
-        path_c += path[path[0] == '.':]
-
-    return PATH_SEPARATOR.join([path_c, path_type])
-
-
 def parse_path_for_plugins(library_path) -> list:
     """
     Фильтрация + конвертация плагинов в библиотеке бота
@@ -73,7 +59,6 @@ def parse_path_for_plugins(library_path) -> list:
         if os.path.isdir(module_path):
             if "__init__.py" in os.listdir(module_path):
                 yield module_name
-
 
 def parse_plugin_for_libs(module):
     for _, library in inspect.getmembers(module):
@@ -92,21 +77,21 @@ def remove_duplicates(array):
     """
     Убрать дубликаты
     """
+    origin_list = []
 
-    return list(set(array))
+    for item in array:
+        if item in origin_list:
+            continue
+        
+        origin_list.append(item)
 
+        yield item
 
-def smart_split(text, split_char = " ") -> filter:
-    """
-    Умное разделение
-    """
-
-    return filter(lambda item: item != "", text.split(split_char))
-
-def get_mentions_list(text):
+def get_mentions(text):
     pattern = re.compile(r'\[.*?\]')
-    return [dump_mention(i) for i in pattern.findall(text)]
 
+    for item in pattern.findall(text):
+        yield dump_mention(item)
 
 def convert_command(text:str) -> list:
     """
@@ -114,7 +99,7 @@ def convert_command(text:str) -> list:
     """
 
     text_filtered = text.replace("[club", "[public", -1)
-    mention_list = get_mentions_list(text)
+    mention_list = list(get_mentions(text))
 
     for item in mention_list:
         text_filtered = text_filtered.replace(repr(item), "all", 1)
@@ -126,7 +111,6 @@ def convert_command(text:str) -> list:
             text_splitted[index] = mention_list.pop(0)
     
     return text_splitted
-
 
 def censor_result(result: str):
     """
@@ -151,15 +135,12 @@ def censor_links(result:str):
     Цензор ссылок
     """
 
-    links = remove_duplicates(
-        re.findall(r"[^ (){\}\[\]\'\";]+\.[^ (){\}\[\]\'\";]+", result)
-    )
+    list_of_words = re.findall(r"[^ (){\}\[\]\'\";]+\.[^ (){\}\[\]\'\";]+", result)
 
-    for link in links:
+    for link in remove_duplicates(list_of_words):
         result = result.replace(link, "[ссылка удалена]")
 
     return result
-
 
 async def convert_to_package(toolkit, event: dict):
     """
@@ -181,7 +162,7 @@ async def convert_to_package(toolkit, event: dict):
         package_raw.update(event['object']['message'])
         package_raw['items'] = convert_command(censor_result(package_raw.get("text", "")))
         package_raw['params'] = event['object']['client_info']
-        package_raw['mentions'] = get_mentions_list(package_raw.get("text", ""))
+        package_raw['mentions'] = list(get_mentions(package_raw.get("text", "")))
 
     else:
         package_raw.update(event['object'])
@@ -194,7 +175,6 @@ async def convert_to_package(toolkit, event: dict):
 
     return package
 
-
 def toolkit_raise(toolkit, message: str, log_level: LogLevel, exception: Exception):
     """
     Вызвать исключение с автоматической записью в лог
@@ -203,11 +183,15 @@ def toolkit_raise(toolkit, message: str, log_level: LogLevel, exception: Excepti
     toolkit.log(message, log_level = log_level)
     raise exception(message)
 
-
 def wrap_filter(check_function):
     """
     Обёртка для простых функций
     """
+    if inspect.isclass(check_function):
+        raise TypeError("wrap_filter takes only functions")
+    
+    if check_function.__code__.co_argcount != 2:
+        raise Exception("wrap_filter takes only functions that takes only 2 args: toolkit and package")
 
     def decorator(**kwargs):
         wrapped_filter = Filter()
@@ -218,7 +202,6 @@ def wrap_filter(check_function):
 
     return decorator
 
-
 def gen_random() -> int:
     """
     Сгенерировать случайное число (для messages.send метода)
@@ -226,7 +209,6 @@ def gen_random() -> int:
 
     return int(random.random() * 999999)
 
-    
 def get_callable_list(object, name_list):
     for key in name_list:
         item = getattr(object, key)

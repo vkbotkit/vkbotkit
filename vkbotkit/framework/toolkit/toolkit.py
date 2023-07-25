@@ -10,7 +10,6 @@ from .uploader import Uploader
 from .logger import Log
 from ...objects import data, exceptions, enums
 from ...objects.mention import Mention
-from ...utils import dump_mention
 
 
 class ToolKit:
@@ -18,18 +17,17 @@ class ToolKit:
     Инструментарий
     """
 
-    def __init__ (self, session, method, assets_path = None):
+    def __init__ (self, session, method):
         self._session = session
         self._method = method
         self.__bot_mention=None
 
-        self.assets = Assets(self, assets_path)
+        self.assets = Assets(self)
         self.log = Log()
         self.messages = Messages(self.api)
         self.upload = Uploader(self.assets, self.api)
         self.is_polling = False
         self.bot_mentions = []
-
 
     def __repr__(self):
         return "<vkbotkit.framework.toolkit>"
@@ -42,21 +40,18 @@ class ToolKit:
 
         return GetAPI(self._session, self._method)
 
-
     def stop_polling(self) -> None:
         """
         Остановить обработку уведомлений с сервера
         """
 
-        if self.is_polling:
-            self.is_polling = False
-            self.log("polling finished", enums.LogLevel.DEBUG)
-
-        else:
+        if not self.is_polling:
             self.log(
                 "attempt to stop poll cycle that is not working now",
                 enums.LogLevel.WARNING)
-
+            return
+        
+        self.is_polling = False
 
     def configure_logger(self, log_level: enums.LogLevel = enums.LogLevel.INFO,
         log_to_file = False, log_to_console = False):

@@ -1,7 +1,12 @@
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import os
-from importlib.util import spec_from_file_location, module_from_spec
+from enum import Enum
+
+
+class PluginType(Enum):
+    ONE_FILE="one-file"
+    PACKAGE="package"
 
 class Handler(FileSystemEventHandler):
     def dispatch(self, event):
@@ -9,46 +14,69 @@ class Handler(FileSystemEventHandler):
 Тип события: {event.event_type},
 Позиция: {event.src_path}
 """)
-
         
 class ModifyWatcher():
-    def __init__(self, paths, watcher_action):
-        self.paths = paths
+    def __init__(self, watcher_action):
+        self.library_directory = os.getcwd() + os.sep + "library"
         self.observer = Observer()
         self.handler = Handler()
         self.handler.dispatch = self.get_dispatch()
-        self.mod_map = {}
+        self.plugins = {}
         self.watcher_action = watcher_action
 
-        self.observer.schedule(self.handler, os.getcwd(), recursive=True)
+        self.observer.schedule(self.handler, self.library_directory, recursive=True)
         self.observer.start()
 
     def get_dispatch(self):
         def dispatch(event):
-            if event.src_path not in self.mod_map:
+            if event.src_path.startswith(os.path.join(self.library_directory, "__pycache__")):
                 return
             
-            for path in self.paths:
-                if path is None:
-                    continue
+            plugin_path, _ = os.path.split(event.src_path)
 
-                module_data = self.mod_map[event.src_path]
-                self.watcher_action(event.event_type, module_data)
+            if plugin_path == self.library_directory: # One-file plugins
+                for plugin_data in self.plugins.values():
+                    if plugin_data["type"] == PluginType.PACKAGE:
+                        continue
+                    
+                    if event.src_path == plugin_data["module_path"]:
+                        self.watcher_action(event.event_type, plugin_data)
+                        break
+            
+            else: # Package plugins
+                for plugin_data in self.plugins.values():
+                    if plugin_data["type"] == PluginType.ONE_FILE:
+                        continue
 
-                return
+                    if event.src_path.startswith(plugin_data["dir_path"]):
+                        self.watcher_action(event.event_type, plugin_data)
+                        break            
+            pass
 
         return dispatch
     
-    def add_watch(self, module, module_path_name):
-        self.mod_map[module.__loader__.path] = {
-            "module": module,
-            "module_path": module.__loader__.path,
-            "module_path_name": module_path_name
-        }
+    def add_watch(self, plugin, plugin_codename):
+        module_path = plugin.__loader__.path
+        plugin_path, plugin_root_filename = os.path.split(module_path)
 
+        if plugin_path == self.library_directory:
+            # one-file plugin
+            
+            self.plugins[plugin_codename] = {
+                "plugin_codename": plugin_codename,
+                "plugin": plugin,
+                "type": PluginType.ONE_FILE,
+                "filename": plugin_root_filename,
+                "module_path": module_path
+            }
 
-if __name__ == "__main__":
-    paths = [
-        "C:\\Users\\kenso\\OneDrive\\Документы\\GitHub\\vkbotkit\\vkbotkit\\objects",
-    ]
-    watcher = ModifyWatcher(paths)
+        else:
+            # package plugin
+
+            self.plugins[plugin_codename] = {
+                "plugin_codename": plugin_codename,
+                "plugin": plugin,
+                "type": PluginType.PACKAGE,
+                "dir_path": plugin_path,
+                "module_path": module_path
+            }

@@ -1,5 +1,5 @@
 """
-Copyright 2022 kensoi
+Copyright 2023 kensoi
 """
 
 import os
@@ -8,5 +8,5 @@ from .library import Library
 from .mention import Mention
 
 PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.3а4"
+VERSION = "1.3a5"
 NAME_CASES = ['nom', 'gen','dat', 'acc', 'ins', 'abl']

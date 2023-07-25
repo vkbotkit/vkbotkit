@@ -1,5 +1,5 @@
 """
-Copyright 2022 kensoi
+Copyright 2023 kensoi
 """
 
 import os
@@ -13,34 +13,25 @@ class Assets:
     Рабочий класс для работы с медиафайлами из каталога ассетов.
     """
 
-    def __init__(self, toolkit, assets = None):
-        if not assets:
-            assets = PATH_SEPARATOR.join([os.getcwd(), "assets", ""])
+    def __init__(self, toolkit):
+        self.path = PATH_SEPARATOR.join([os.getcwd(), "assets", ""])
 
-        if assets[-1] != PATH_SEPARATOR:
-            assets += PATH_SEPARATOR
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
+            toolkit.log(message = "Assets directory was made by framework", log_level = LogLevel.DEBUG)
 
-        if assets.startswith("."):
-            assets = os.getcwd() + assets[1:]
-
-        if not os.path.exists(assets):
-            os.mkdir(assets)
-            toolkit.log(message = "Assets directory was made by framework")
-
-        if not os.path.isdir(assets):
+        if not os.path.isdir(self.path):
             toolkit_raise(toolkit, "Assets directory should be a folder", LogLevel.DEBUG, Exception)
-
-        self.__path = assets
 
 
     def __call__(self, *args, **kwargs):
         args = list(args)
 
         if len(args) > 0:
-            args[0] = self.__path + args[0]
+            args[0] = self.path + args[0]
 
         elif 'file' in kwargs:
-            kwargs['file'] = self.__path + kwargs['file']
+            kwargs['file'] = self.path + kwargs['file']
 
         encoding = kwargs.pop('encoding', "utf-8")
 

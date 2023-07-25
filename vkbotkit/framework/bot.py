@@ -1,9 +1,8 @@
 """
-Copyright 2022 kensoi
+Copyright 2023 kensoi
 """
 
 import asyncio
-import os
 import typing
 import aiohttp
 from aiohttp.client_exceptions import *
@@ -14,7 +13,7 @@ from .toolkit.toolkit import ToolKit
 from ..objects import exceptions
 from ..objects.enums import LogLevel
 from ..objects.data import Response
-from ..utils import PATH_SEPARATOR, convert_to_package, toolkit_raise
+from ..utils import convert_to_package, toolkit_raise
 
 
 class Bot:
@@ -29,11 +28,9 @@ class Bot:
         self.group_id = group_id
         self.api_version = api_version
 
-        self.assets_path = os.getcwd() + PATH_SEPARATOR + "assets"
-
         self._session = aiohttp.ClientSession(trust_env=trust_env)
         self.longpoll = Longpoll(self._session, self._method)
-        self.toolkit = ToolKit(self._session, self._method, self.assets_path)
+        self.toolkit = ToolKit(self._session, self._method)
         self.library_parser = LibraryParser()
 
 
@@ -113,12 +110,11 @@ class Bot:
 
             bot_data = await self.toolkit.get_me()
 
-            self.toolkit.group_id = bot_data.id
             self.toolkit.bot_id = bot_data.id
             self.toolkit.screen_name = bot_data.screen_name
             self.toolkit.is_polling = True
 
-            await self.longpoll.update_server(self.toolkit.group_id)
+            await self.longpoll.update_server(self.toolkit.bot_id)
             self.toolkit.log(f"@{self.toolkit.screen_name}: started polling.")
 
             while self.toolkit.is_polling:

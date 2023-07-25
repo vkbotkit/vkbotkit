@@ -1,11 +1,11 @@
 """
-Copyright 2022 kensoi
+Copyright 2023 kensoi
 """
 
 
 class Longpoll:
     """
-    Объект для прослушки VKBots Longpoll
+    Объект для прослушки VK Bots Longpoll
     """
 
     def __init__(self, https, method) -> None:

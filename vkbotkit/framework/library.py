@@ -1,5 +1,5 @@
 """
-Copyright 2022 kensoi
+Copyright 2023 kensoi
 """
 
 import asyncio
@@ -31,8 +31,8 @@ class LibraryParser:
     def __init__(self) -> None:
         self.handlers = []
         self.modules = {}
-        self.__libdir = None
-        self.__modify_watcher = ModifyWatcher([self.__libdir], self.watcher_action)
+        self.__library_dir = os.getcwd() + PATH_SEPARATOR + "library"
+        self.__modify_watcher = ModifyWatcher(self.watcher_action)
 
 
     def __repr__(self) -> str:
@@ -44,8 +44,6 @@ class LibraryParser:
         Импортировать все плагины из каталога library (либо иного другого)
         """
 
-        self.__library_dir = os.getcwd() + PATH_SEPARATOR + "library"
-        self.__modify_watcher.paths.append(self.__library_dir)
         self.toolkit = toolkit
 
         if not os.path.exists(self.__library_dir):
@@ -91,26 +89,23 @@ class LibraryParser:
         self.modules[library_name] = library
 
     def watcher_action(self, action, item):
-        module_path = item['module_path']
-        
-        self.toolkit.log(f"action: {action}, path: {module_path}", log_level=LogLevel.DEBUG)
-
         if action == EVENT_TYPE_MODIFIED:
-            module = item["module"]
-            module_name = item["module_path_name"]
-            importlib.reload(module)
+            plugin = item["plugin"]
+            plugin_codename = item["plugin_codename"]
+            importlib.reload(plugin)
 
             plugin_lib_count = 0
 
-            for library in parse_plugin_for_libs(module):
-                self.init_library(library, module_name)
+            for library in parse_plugin_for_libs(plugin):
+                self.init_library(library, plugin_codename)
                 plugin_lib_count += 1
 
             self.update_handlers()
 
-            self.toolkit.log("{plugin_name}: {plugin_lib_count} libs reloaded".format(
-                plugin_name=module_name,
-                plugin_lib_count=plugin_lib_count
+            self.toolkit.log("{plugin_name}: {plugin_lib_count} libs reloaded [{action}]".format(
+                plugin_name=plugin_codename,
+                plugin_lib_count=plugin_lib_count,
+                action=action
             ), LogLevel.DEBUG)
 
     def update_handlers(self):
