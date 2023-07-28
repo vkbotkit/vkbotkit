@@ -63,6 +63,7 @@ class LibraryParser:
             module = importlib.import_module(module_import_path)
 
             plugin_lib_count = 0
+            self.modules[module_import_path] = []
 
             for library in parse_plugin_for_libs(module):
                 self.init_library(library, module_import_path)
@@ -75,8 +76,10 @@ class LibraryParser:
                 plugin_lib_count=plugin_lib_count
             ), LogLevel.DEBUG)
 
+        self.update_handlers()
 
-    def init_library(self, library_constructor:Library, library_name: str) -> None:
+
+    def init_library(self, library_constructor:Library, library_module_id: str) -> None:
         """
         Импортировать специфический модуль (должен быть унаследован от
         Library и при передаче в функцию проинициализирован)
@@ -85,8 +88,8 @@ class LibraryParser:
 
         if not isinstance(library, Library):
             raise TypeError("Library should be Library :)")
-        
-        self.modules[library_name] = library
+
+        self.modules[library_module_id].append(library)
 
     def watcher_action(self, action, item):
         if action == EVENT_TYPE_MODIFIED:
@@ -95,6 +98,7 @@ class LibraryParser:
             importlib.reload(plugin)
 
             plugin_lib_count = 0
+            self.modules[plugin_codename] = []
 
             for library in parse_plugin_for_libs(plugin):
                 self.init_library(library, plugin_codename)
@@ -111,9 +115,10 @@ class LibraryParser:
     def update_handlers(self):
         self.handlers = []
 
-        for library in self.modules.values():
-            library_handler_list = get_library_handlers(library)
-            self.handlers.extend(library_handler_list)
+        for library_list in self.modules.values():
+            for library in library_list:
+                library_handler_list = get_library_handlers(library)
+                self.handlers.extend(library_handler_list)
 
         self.handlers.sort(key = lambda h: h.filter.priority)
 

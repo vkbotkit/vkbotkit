@@ -8,5 +8,5 @@ from .library import Library
 from .mention import Mention
 
 PATH_SEPARATOR = "\\" if os.name == 'nt' else "/"
-VERSION = "1.3a5"
+VERSION = "1.3а4"
 NAME_CASES = ['nom', 'gen','dat', 'acc', 'ins', 'abl']

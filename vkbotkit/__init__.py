@@ -5,6 +5,7 @@ Copyright 2023 kensoi
 from .framework.bot import Bot
 from .objects import VERSION as __version__
 
+
 __title__ = "vkbotkit"
 __author__ = 'kensoi'
 __license__ = 'Apache v2'

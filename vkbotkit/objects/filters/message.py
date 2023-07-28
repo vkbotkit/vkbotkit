@@ -74,7 +74,7 @@ class IsCommand(Filter):
 
         if package.type is not Events.MESSAGE_NEW:
             return
-
+        
         if len(package.items) < 2:
             return
         

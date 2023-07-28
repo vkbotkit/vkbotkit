@@ -6,7 +6,6 @@ import inspect
 import os
 import random
 import re
-import typing
 
 from .objects import Mention, PATH_SEPARATOR
 from .objects.enums import Action, Events, LogLevel
@@ -155,8 +154,9 @@ async def convert_to_package(toolkit, event: dict):
         exception = exceptions.UnsupportedEvent
         toolkit_raise(toolkit, message, LogLevel.ERROR, exception)
 
-    package_raw = {}
-    package_raw['type'] = event_type
+    package_raw = {
+        "type": event_type
+    }
 
     if event_type is Events.MESSAGE_NEW:
         package_raw.update(event['object']['message'])
@@ -169,6 +169,7 @@ async def convert_to_package(toolkit, event: dict):
         package_raw['type'] = event_type
 
     package = Package(package_raw)
+
     if event_type is Events.MESSAGE_NEW:
         if "action" in event['object']['message']:
             package.action.type = Action(package.action.type)
@@ -187,20 +188,17 @@ def wrap_filter(check_function):
     """
     Обёртка для простых функций
     """
+
     if inspect.isclass(check_function):
         raise TypeError("wrap_filter takes only functions")
     
     if check_function.__code__.co_argcount != 2:
         raise Exception("wrap_filter takes only functions that takes only 2 args: toolkit and package")
 
-    def decorator(**kwargs):
-        wrapped_filter = Filter()
-        wrapped_filter.__dict__.update(kwargs)
-        wrapped_filter.check = check_function
+    wrapped_filter = Filter()
+    wrapped_filter.check = check_function
 
-        return wrapped_filter
-
-    return decorator
+    return wrapped_filter
 
 def gen_random() -> int:
     """
@@ -235,7 +233,6 @@ def get_library_handlers(library):
     if not isinstance(library, Library):
         raise TypeError("library should be instance of vkbotkit.objects.callback.Library")
     
-
     attribute_name_list = set(dir(library)) - set(dir(Library()))
     callable_list = list(get_callable_list(library, attribute_name_list))
     return list(get_type_list(callable_list, Wrapper))
