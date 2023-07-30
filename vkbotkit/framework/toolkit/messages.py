@@ -55,6 +55,9 @@ class Messages:
         """
 
         for message_task in self.__task_list.values():
+            if "peer_id" not in package.raw:
+                continue
+
             if message_task.peer_id == package.peer_id:
                 if message_task.from_id == package.from_id:
                     message_task.response = package
@@ -85,7 +88,13 @@ class ReplyTask:
     def __init__(self, package):
         self.timestamp = time.time()
         self.peer_id = package.peer_id
-        self.from_id = package.from_id
+
+        if "from_id" in package.raw:
+            self.from_id = package.from_id  
+
+        else:
+            self.from_id = package.peer_id
+
         self.response = None
 
 

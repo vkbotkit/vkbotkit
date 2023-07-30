@@ -107,7 +107,7 @@ class HasPayload(Filter):
         Фильтрация обработчиков на условие
         """
 
-        if package.type is Events.MESSAGE_NEW:
+        if package.type is Events.MESSAGE_EVENT:
             return hasattr(package, "payload")
 
 
