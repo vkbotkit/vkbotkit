@@ -3,6 +3,8 @@ Copyright 2023 kensoi
 """
 
 from .framework.bot import Bot
+from .framework.library import PluginManager
+from .framework.longpoll import BotLongpoll
 from .objects import VERSION as __version__
 
 __title__ = "vkbotkit"

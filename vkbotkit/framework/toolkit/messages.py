@@ -90,7 +90,7 @@ class ReplyTask:
         self.peer_id = package.peer_id
 
         if "from_id" in package.raw:
-            self.from_id = package.from_id  
+            self.from_id = package.from_id
 
         else:
             self.from_id = package.peer_id

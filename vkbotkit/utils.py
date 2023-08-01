@@ -6,14 +6,13 @@ import inspect
 import os
 import random
 import re
-import typing
 
-from .objects import Mention, PATH_SEPARATOR
+from .objects import Mention
 from .objects.enums import Action, Events, LogLevel
 from .objects.filters import Filter
 from .objects.package import Package
 from .objects import exceptions
-    
+
 from .objects.library import Library
 from .objects.callback.wrapper import Wrapper
 
@@ -24,25 +23,25 @@ def dump_mention(text: str) -> Mention:
     """
 
     if text[0] != "[" or text[-1] != "]":
-        raise Exception(f"can't init mention from this text: \"{text}\" ")
+        raise ValueError(f"can't init mention from this text: \"{text}\" ")
 
     text = text[1:-1]
 
-    id, key = text.split("|", 1)
+    user_id, key = text.split("|", 1)
     user_type = -1 # 1 is a user, -1 is a community
 
-    if id.startswith('id'):
+    if user_id.startswith('id'):
         user_type = 1
-        id = id.replace("id", "", 1)
+        user_id = user_id.replace("id", "", 1)
 
-    elif id.startswith('club') or id.startswith('public'):
-        id = id.replace("club", "", 1)
-        id = id.replace("public", "", 1)
+    elif user_id.startswith('club') or user_id.startswith('public'):
+        user_id = user_id.replace("club", "", 1)
+        user_id = user_id.replace("public", "", 1)
 
     else:
         raise TypeError("Invalid page id (should be club, public or id)")
 
-    return Mention(int(id) * user_type, key)
+    return Mention(int(user_id) * user_type, key)
 
 def parse_path_for_plugins(library_path) -> list:
     """
@@ -50,8 +49,8 @@ def parse_path_for_plugins(library_path) -> list:
     """
 
     for module_name in os.listdir(library_path):
-        module_path = PATH_SEPARATOR.join([library_path, module_name])
-        
+        module_path = os.path.sep.join([library_path, module_name])
+
         if os.path.isfile(module_path):
             if module_name.endswith(".py"):
                 yield module_name[:-3]
@@ -61,6 +60,10 @@ def parse_path_for_plugins(library_path) -> list:
                 yield module_name
 
 def parse_plugin_for_libs(module):
+    """
+    Find vkbotkit.objects.Library at module
+    """
+
     for _, library in inspect.getmembers(module):
         if not inspect.isclass(library):
             continue
@@ -70,24 +73,29 @@ def parse_plugin_for_libs(module):
 
         if library == Library:
             continue
-        
+
         yield library
 
 def remove_duplicates(array):
     """
     Убрать дубликаты
     """
+
     origin_list = []
 
     for item in array:
         if item in origin_list:
             continue
-        
+
         origin_list.append(item)
 
         yield item
 
 def get_mentions(text):
+    """
+    get list of mentions at text    
+    """
+
     pattern = re.compile(r'\[.*?\]')
 
     for item in pattern.findall(text):
@@ -103,13 +111,13 @@ def convert_command(text:str) -> list:
 
     for item in mention_list:
         text_filtered = text_filtered.replace(repr(item), "all", 1)
-    
+
     text_splitted = text_filtered.split(" ")
 
-    for index in range(len(text_splitted)):
-        if text_splitted[index] == "all":
+    for index, item in enumerate(text_splitted, start=0):
+        if item == "all":
             text_splitted[index] = mention_list.pop(0)
-    
+
     return text_splitted
 
 def censor_result(result: str):
@@ -142,7 +150,7 @@ def censor_links(result:str):
 
     return result
 
-async def convert_to_package(toolkit, event: dict):
+def convert_to_package(toolkit, event: dict):
     """
     Обработать событие с сервера ВКонтакте в формат Package для внутренней работы фреймворка
     """
@@ -151,7 +159,7 @@ async def convert_to_package(toolkit, event: dict):
         event_type = Events(event['type'])
 
     except ValueError:
-        message = "Unsupported event ({event_type})".format(event_type=event['type'])
+        message = f"Unsupported event ({event['type']})"
         exception = exceptions.UnsupportedEvent
         toolkit_raise(toolkit, message, LogLevel.ERROR, exception)
 
@@ -189,9 +197,10 @@ def wrap_filter(check_function):
     """
     if inspect.isclass(check_function):
         raise TypeError("wrap_filter takes only functions")
-    
+
     if check_function.__code__.co_argcount != 2:
-        raise Exception("wrap_filter takes only functions that takes only 2 args: toolkit and package")
+        raise TypeError("wrap_filter takes only functions that \
+                        takes only 2 args: toolkit and package")
 
     wrapped_filter = Filter()
     wrapped_filter.check = check_function
@@ -207,23 +216,37 @@ def gen_random() -> int:
 
     return int(random.random() * 999999)
 
-def get_callable_list(object, name_list):
+def get_callable_list(parent_object, name_list):
+    """
+    get list of functions at object
+    """
+
     for key in name_list:
-        item = getattr(object, key)
+        item = getattr(parent_object, key)
 
         if callable(item):
             yield item
 
 def get_type_list(item_list, needed_type):
-    for item in item_list:
-        try:
-            inited_callback = item()
+    """
+    get list of needed type
+    """
 
-            if isinstance(inited_callback, needed_type):
-                yield inited_callback
-            
-        except Exception as e:
-            pass
+    for item in item_list:
+        if item.__code__.co_argcount != 1:
+            continue
+
+        inited_callback = item()
+
+        if isinstance(inited_callback, needed_type):
+            yield inited_callback
+
+def get_attribute_set(parent_object):
+    """
+    get set of attributes at parent_object
+    """
+
+    return set(dir(parent_object))
 
 def get_library_handlers(library):
     """
@@ -232,8 +255,7 @@ def get_library_handlers(library):
 
     if not isinstance(library, Library):
         raise TypeError("library should be instance of vkbotkit.objects.callback.Library")
-    
 
-    attribute_name_list = set(dir(library)) - set(dir(Library()))
-    callable_list = list(get_callable_list(library, attribute_name_list))
-    return list(get_type_list(callable_list, Wrapper))
+    attribute_name_list = get_attribute_set(library) - get_attribute_set(Library())
+    callable_list = get_callable_list(library, attribute_name_list)
+    return get_type_list(callable_list, Wrapper)

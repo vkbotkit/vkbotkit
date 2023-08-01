@@ -2,18 +2,17 @@
 Copyright 2023 kensoi
 """
 
-import asyncio
 import typing
 import aiohttp
-from aiohttp.client_exceptions import *
+from aiohttp.client_exceptions import ClientConnectorError
 
-from .library import LibraryParser
-from .longpoll import Longpoll
-from .toolkit.toolkit import ToolKit
+from .longpoll import BotLongpoll
+from .toolkit  import ToolKit
 from ..objects import exceptions
 from ..objects.enums import LogLevel
 from ..objects.data import Response
-from ..utils import convert_to_package, toolkit_raise
+
+from ..utils import convert_to_package
 
 
 class Bot:
@@ -21,22 +20,18 @@ class Bot:
     Объект бота
     """
 
-    def __init__(self, access_token, group_id, api_version = "5.531",
+    def __init__(self, access_token, bot_id, api_version = "5.531",
             trust_env: bool = False) -> None:
-
         self.access_token = access_token
-        self.group_id = group_id
+        self.bot_id = bot_id
         self.api_version = api_version
 
-        self._session = aiohttp.ClientSession(trust_env=trust_env)
-        self.longpoll = Longpoll(self._session, self._method)
-        self.toolkit = ToolKit(self._session, self._method)
-        self.library_parser = LibraryParser()
-
+        self.session = aiohttp.ClientSession(trust_env=trust_env)
+        self.toolkit = ToolKit(self)
+        self.longpoll = BotLongpoll(self)
 
     def __repr__(self) -> str:
         return "<vkbotkit.framework.bot>"
-
 
     @property
     def api_url(self) -> str:
@@ -46,8 +41,7 @@ class Bot:
 
         return "https://api.vk.com/method/"
 
-
-    async def _method(self, method: str = "groups.getById",
+    async def method(self, method: str = "groups.getById",
             params: typing.Optional[dict] = None) -> Response:
         """
         Скрытая функция для доступа к API
@@ -62,7 +56,7 @@ class Bot:
         if "v" not in request_data:
             request_data["v"] = self.api_version
 
-        response = await self._session.post(self.api_url + method, data = request_data)
+        response = await self.session.post(self.api_url + method, data = request_data)
         json = await response.json(content_type=None)
 
         if "response" in json:
@@ -79,53 +73,23 @@ class Bot:
 
         return json
 
-
-    async def close(self) -> None:
+    async def poll_server(self):
         """
-        Метод для безопасного закрытия сессии бота
+        get updates from server
         """
+        await self.toolkit.match_data()
 
-        loop = asyncio.get_event_loop()
-
-        for task in asyncio.all_tasks(loop):
-            task.cancel()
-
-        await self._session.close()
-
-
-    async def start_polling(self) -> None:
-        """
-        Начать обработку уведомлений с сервера ВКонтакте
-        """
+        await self.longpoll.update_server(self.toolkit.bot_id)
+        self.toolkit.is_polling = True
+        self.toolkit.log(f"@{self.toolkit.screen_name}: started polling.")
 
         try:
-            loop = asyncio.get_event_loop()
-
-            self.library_parser.import_library(self.toolkit)
-            self.library_parser.update_handlers()
-
-            if self.longpoll.is_polling:
-                message = "polling already started"
-                toolkit_raise(self.toolkit, message, LogLevel.ERROR, exceptions.LongpollError)
-
-            bot_data = await self.toolkit.get_me()
-
-            self.toolkit.bot_id = bot_data.id
-            self.toolkit.screen_name = bot_data.screen_name
-            self.toolkit.is_polling = True
-
-            await self.longpoll.update_server(self.toolkit.bot_id)
-            self.toolkit.log(f"@{self.toolkit.screen_name}: started polling.")
-
             while self.toolkit.is_polling:
-                for event in await self.longpoll.check(self.group_id):
-                    package = await convert_to_package(self.toolkit, event)
-                    parse_task = self.library_parser.parse(self.toolkit, package)
-                    loop.create_task(parse_task)
+                for event in await self.longpoll.check(self.bot_id):
+                    yield convert_to_package(self.toolkit, event)
 
-        except ClientConnectorError as e:
-            self.toolkit.log(f"ClientConnectorError: {e}", log_level=LogLevel.ERROR)
+        except ClientConnectorError as error_object:
+            self.toolkit.log(f"ClientConnectorError: {error_object}", log_level=LogLevel.ERROR)
 
         finally:
             self.toolkit.log(f"@{self.toolkit.screen_name}: stopped polling.")
-            await self.close()

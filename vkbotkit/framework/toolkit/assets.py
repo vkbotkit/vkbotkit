@@ -5,7 +5,7 @@ Copyright 2023 kensoi
 import os
 
 from ...objects.enums import LogLevel
-from ...utils import PATH_SEPARATOR, toolkit_raise
+from ...utils import toolkit_raise
 
 
 class Assets:
@@ -14,11 +14,12 @@ class Assets:
     """
 
     def __init__(self, toolkit):
-        self.path = PATH_SEPARATOR.join([os.getcwd(), "assets", ""])
+        self.path = os.path.join(os.getcwd(), "assets")
 
         if not os.path.exists(self.path):
             os.mkdir(self.path)
-            toolkit.log(message = "Assets directory was made by framework", log_level = LogLevel.DEBUG)
+            toolkit.log(message = "Assets directory was made by framework",
+                        log_level = LogLevel.DEBUG)
 
         if not os.path.isdir(self.path):
             toolkit_raise(toolkit, "Assets directory should be a folder", LogLevel.DEBUG, Exception)
@@ -31,7 +32,7 @@ class Assets:
             args[0] = self.path + args[0]
 
         elif 'file' in kwargs:
-            kwargs['file'] = self.path + kwargs['file']
+            kwargs['file'] = os.path.join(self.path, kwargs['file'])
 
         encoding = kwargs.pop('encoding', "utf-8")
 

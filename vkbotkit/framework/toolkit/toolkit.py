@@ -17,10 +17,13 @@ class ToolKit:
     Инструментарий
     """
 
-    def __init__ (self, session, method):
-        self._session = session
-        self._method = method
-        self.__bot_mention=None
+    def __init__ (self, bot):
+        self.session = bot.session
+        self.method = bot.method
+
+        self.bot_id:bool = None
+        self.screen_name:bool = None
+        self.bot_is_group:bool = None
 
         self.assets = Assets(self)
         self.log = Log()
@@ -38,7 +41,18 @@ class ToolKit:
         Обёртка вокруг Bot._method()
         """
 
-        return GetAPI(self._session, self._method)
+        return GetAPI(self.session, self.method)
+
+    async def match_data(self):
+        """
+        set basic data about bot
+        """
+
+        bot_data = await self.get_me(fields="screen_name")
+
+        self.bot_id = bot_data.id
+        self.screen_name = bot_data.screen_name
+        self.bot_is_group = bot_data.raw.get("type") == "group"
 
     def stop_polling(self) -> None:
         """
@@ -50,7 +64,7 @@ class ToolKit:
                 "attempt to stop poll cycle that is not working now",
                 enums.LogLevel.WARNING)
             return
-        
+
         self.is_polling = False
 
     def configure_logger(self, log_level: enums.LogLevel = enums.LogLevel.INFO,
@@ -67,42 +81,24 @@ class ToolKit:
         Получить информацию о сообществе, в котором работает ваш бот
         """
 
-        if not fields:
-            fields = ['screen_name']
+        users_info = await self.api.users.get(fields = fields)
 
-        page_info = await self.api.users.get(fields=', '.join(fields), raw=True)
+        if len(users_info) == 0:
+            communities_info = await self.api.groups.getById(fields = fields)
+            return communities_info.groups[0]
 
-        if len(page_info) > 0:
-            bot_type = "id"
-
-        else:
-            page_info = await self.api.groups.getById(fields = ", ".join(fields), raw=True)
-
-            if len(page_info) > 0:
-                bot_type = "club"
-
-        return data.Response({
-            **page_info['groups'][0], "bot_type": bot_type
-        })
+        return users_info[0]
 
 
     async def get_my_mention(self) -> Mention:
         """
         Получить форму упоминания сообщества, в котором работает ваш бот
         """
-        if not self.__bot_mention:
-            response = await self.get_me()
-            
-            if response.bot_type == "id":
-                bot_id = response.id
 
-            else:
-                bot_id = -response.id
-
-            self.__bot_mention = Mention(bot_id, "@{screen_name}".format(screen_name=response.screen_name))
-        
-        return self.__bot_mention
-            
+        return await self.create_mention(
+            self.bot_id * (-1 * self.bot_is_group),
+            f"@{self.screen_name}"
+        )
 
     async def get_chat_members(self, peer_id):
         """

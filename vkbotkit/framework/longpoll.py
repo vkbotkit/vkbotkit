@@ -3,14 +3,14 @@ Copyright 2023 kensoi
 """
 
 
-class Longpoll:
+class BotLongpoll:
     """
     Объект для прослушки VK Bots Longpoll
     """
 
-    def __init__(self, https, method) -> None:
-        self._https = https
-        self._method = method
+    def __init__(self, bot) -> None:
+        self._https = bot.session
+        self._method = bot.method
         self.is_polling = False
 
         self.__url = ""
