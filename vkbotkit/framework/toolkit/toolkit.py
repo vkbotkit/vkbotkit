@@ -160,3 +160,36 @@ class ToolKit:
                 mention_key = response[0].name
 
         return Mention(mention_id, mention_key)
+
+    async def get_community_admins(self, community):
+        """
+        Получить список ID участников, кто является администратором.
+
+        Возвращает список объектов со свойствами id [int], permissions [list] и role [str]
+
+        Если функция вернула пустой список, то бот не имеет прав администратора в этом сообществе   
+        """
+
+        try:
+            response = await self.api.groups.getMembers(
+                group_id = community,
+                filter = "managers"
+            )
+
+            return response.items
+
+        except exceptions.MethodError as method_error:
+            self.log(str(method_error), enums.LogLevel.DEBUG)
+            return []
+
+    async def get_bot_admins(self):
+        """
+        Получить список ID участников, кто является администратором в сообществе, 
+        где установлен бот.
+        """
+
+        if not self.bot_is_group:
+            self.log("Your bot is not community. It is user", enums.LogLevel.ERROR)
+            raise exceptions.MethodError("Your bot is not community. It is user")
+
+        return await self.get_community_admins(self.bot_id)

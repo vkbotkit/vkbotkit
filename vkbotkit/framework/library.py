@@ -73,10 +73,11 @@ class PluginManager:
 
             self.__modify_watcher.add_watch(module, module_import_path)
 
-            self.toolkit.log(
-                f"{module_name}: import of {plugin_lib_count} libs succeed",
-                LogLevel.DEBUG
-            )
+            if plugin_lib_count != 0:
+                self.toolkit.log(
+                    f"{folder_name}.{module_name}: import of {plugin_lib_count} libs succeed",
+                    LogLevel.DEBUG
+                )
 
         self.update_handlers()
 

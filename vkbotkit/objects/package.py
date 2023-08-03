@@ -61,6 +61,16 @@ class Geo(Key):
     coordinates: list
     place: Place
 
+class Donut(Key):
+    """
+    Информация о donut свойствах поста
+    """
+
+    is_donut: bool
+    paid_duration: int
+    can_publish_free_copy: bool
+    edit_mode: str
+    durations: list
 
 class Package(Response):
     """
@@ -96,6 +106,7 @@ class Package(Response):
     keyboard: Key
     reply_message: Key
 
+    donut: Donut
 
     def __repr__(self):
         return "<vkbotkit.objects.package>"
