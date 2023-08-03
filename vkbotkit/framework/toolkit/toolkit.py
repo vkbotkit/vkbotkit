@@ -52,7 +52,7 @@ class ToolKit:
 
         self.bot_id = bot_data.id
         self.screen_name = bot_data.screen_name
-        self.bot_is_group = bot_data.raw.get("type") == "group"
+        self.bot_is_group = bot_data.raw.get("type") in ["group", "page"]
 
     def stop_polling(self) -> None:
         """
@@ -156,7 +156,7 @@ class ToolKit:
                 mention_key = response[0].first_name
 
             else:
-                response = await self.api.groups.getById(group_id = mention_id)
+                response = await self.api.groups.getById(group_id = -mention_id)
                 mention_key = response[0].name
 
         return Mention(mention_id, mention_key)

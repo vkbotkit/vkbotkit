@@ -6,4 +6,4 @@ from .callback import callback
 from .library import Library
 from .mention import Mention
 
-VERSION = "1.3a9"
+VERSION = "1.3a10"

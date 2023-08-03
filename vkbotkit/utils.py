@@ -170,7 +170,12 @@ def convert_to_package(toolkit, event: dict):
         package_raw.update(event['object']['message'])
         package_raw['items'] = convert_command(censor_result(package_raw.get("text", "")))
         package_raw['params'] = event['object']['client_info']
-        package_raw['mentions'] = list(get_mentions(package_raw.get("text", "")))
+        package_raw['mentions'] = list(
+            filter(
+                lambda item: item.value != toolkit.bot_id, 
+                get_mentions(package_raw.get("text", ""))
+            )
+        )
 
     else:
         package_raw.update(event['object'])
