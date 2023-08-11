@@ -156,7 +156,7 @@ class ToolKit:
                 mention_key = response[0].first_name
 
             else:
-                response = await self.api.groups.getById(group_id = -mention_id)
+                response = await self.api.groups.getById(group_id = mention_id)
                 mention_key = response[0].name
 
         return Mention(mention_id, mention_key)

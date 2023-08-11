@@ -95,14 +95,11 @@ def get_mentions(text):
     """
     get list of mentions at text    
     """
-    try:
-        pattern = re.compile(r'\[.*?\]')
 
-        for item in pattern.findall(text):
-            yield dump_mention(item)
-    
-    except:
-        return []
+    pattern = re.compile(r'\[.*?\]')
+
+    for item in pattern.findall(text):
+        yield dump_mention(item)
 
 def convert_command(text:str) -> list:
     """
