@@ -88,6 +88,7 @@ class Action(Enum):
     CHAT_PIN_MESSAGE = "chat_pin_message"
     CHAT_UNPIN_MESSAGE = "chat_unpin_message"
     CHAT_INVITE_USER_BY_LINK = "chat_invite_user_by_link"
+    CONVERSATION_STYLE_UPDATE = 'conversation_style_update'
 
 
 class LogLevel(Enum):
